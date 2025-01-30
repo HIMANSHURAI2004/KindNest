@@ -46,11 +46,13 @@
 import { View, Text, useWindowDimensions, Pressable } from "react-native";
 import React from "react";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { AntDesign } from "@expo/vector-icons";
 import Feather from '@expo/vector-icons/Feather';
 import { TabView } from "react-native-tab-view";
 import FirstTab from "./firstTab";
 import SecondTab from "./secondTab";
 import ThirdTab from "./thirdTab";
+import FourthTab from "./fourthTab";
 
 // Define a custom type for the routes
 type Route = {
@@ -64,9 +66,10 @@ const TabsLayout = () => {
   const layout = useWindowDimensions();
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState<Route[]>([
-    { key: "first", title: "Home", icon: "home", iconSet: "Ionicons" },
+    { key: "first", title: "Home", icon: "home", iconSet: "AntDesign" },
     { key: "second", title: "Explore", icon: "compass", iconSet: "Ionicons" },
     { key: "third", title: "About", icon: "user", iconSet: "Feather" },
+    { key: "fourth", title: "Settings", icon: "settings", iconSet: "Feather" },
   ]);
 
   // Function to render each tab
@@ -78,6 +81,8 @@ const TabsLayout = () => {
         return <SecondTab />;
       case "third":
         return <ThirdTab />;
+      case "fourth":
+        return <FourthTab />;
       default:
         return null;
     }
@@ -88,6 +93,8 @@ const TabsLayout = () => {
     switch (iconSet) {
       case "Ionicons":
         return <Ionicons name={iconName} size={size} color={color} />;
+      case "AntDesign":
+        return <AntDesign name={iconName} size={size} color={color} />;
       case "Feather":
         return <Feather name={iconName} size={size} color={color} />;
       default:
