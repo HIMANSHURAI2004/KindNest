@@ -46,25 +46,50 @@
 import { View, Text, useWindowDimensions, Pressable } from "react-native";
 import React from "react";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { TabView, TabBar } from "react-native-tab-view";
+import Feather from '@expo/vector-icons/Feather';
+import { TabView } from "react-native-tab-view";
 import FirstTab from "./firstTab";
 import SecondTab from "./secondTab";
+import ThirdTab from "./thirdTab";
+
+// Define a custom type for the routes
+type Route = {
+  key: string;
+  title: string;
+  icon: string;
+  iconSet: "Ionicons" | "Feather";
+};
 
 const TabsLayout = () => {
   const layout = useWindowDimensions();
   const [index, setIndex] = React.useState(0);
-  const [routes] = React.useState([
-    { key: "first", title: "Home", icon: "home" },
-    { key: "second", title: "Explore", icon: "information-circle" },
+  const [routes] = React.useState<Route[]>([
+    { key: "first", title: "Home", icon: "home", iconSet: "Ionicons" },
+    { key: "second", title: "Explore", icon: "compass", iconSet: "Ionicons" },
+    { key: "third", title: "About", icon: "user", iconSet: "Feather" },
   ]);
 
   // Function to render each tab
-  const renderScene = ({ route }: { route: { key: string } }) => {
+  const renderScene = ({ route }: { route: Route }) => {
     switch (route.key) {
       case "first":
         return <FirstTab />;
       case "second":
         return <SecondTab />;
+      case "third":
+        return <ThirdTab />;
+      default:
+        return null;
+    }
+  };
+
+  // Helper function to render icons dynamically
+  const renderIcon = (iconSet: "Ionicons" | "Feather", iconName: string, color: string, size: number) => {
+    switch (iconSet) {
+      case "Ionicons":
+        return <Ionicons name={iconName} size={size} color={color} />;
+      case "Feather":
+        return <Feather name={iconName} size={size} color={color} />;
       default:
         return null;
     }
@@ -77,7 +102,7 @@ const TabsLayout = () => {
       onIndexChange={setIndex}
       initialLayout={{ width: layout.width }}
       tabBarPosition="bottom"
-      renderTabBar={(props) => (
+      renderTabBar={() => (
         <View style={{ flexDirection: "row", backgroundColor: "#5DADE2", paddingBottom: 10 }}>
           {routes.map((route, routeIndex) => {
             const isActive = index === routeIndex;
@@ -92,7 +117,7 @@ const TabsLayout = () => {
                   padding: 10,
                 }}
               >
-                <Ionicons name={route.icon} size={24} color={isActive ? "white" : "black"} />
+                {renderIcon(route.iconSet, route.icon, isActive ? "white" : "black", 24)}
                 <Text style={{ color: isActive ? "white" : "black", fontSize: 12 }}>{route.title}</Text>
               </Pressable>
             );
@@ -104,6 +129,7 @@ const TabsLayout = () => {
 };
 
 export default TabsLayout;
+
 
 
 
