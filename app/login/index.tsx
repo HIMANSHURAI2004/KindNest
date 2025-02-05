@@ -9,69 +9,50 @@ const LoginScreen = () => {
   const router = useRouter()
 
   return (
-    <View>
-      <View style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        marginTop: 50
-       }}>
-       {/* <View className='flex justify-center items-center mt-[50]'> */}
+      <View 
+      className='h-full w-full'
+      style = {{
+       backgroundColor: Colors.PRIMARY,
+      }}
+      >
         <Image
-          source={require('@/assets/images/login_image.png')}
+          source={require('@/assets/images/image.png')}
           style={styles?.image}
+          className='rounded-b-md w-full'
         />
-        <View style={{ 
-          padding: 25,
-          backgroundColor: Colors.PRIMARY,
-          marginTop: 20,
-          height: '50%',
-         }}>
-          <Text style={{ 
-            fontSize: 30, 
-            fontWeight: 'bold', 
-            color: 'white', 
-            textAlign: 'center' 
-            }}>Empower Your Generosity !</Text>
-          <Text style={{
-            color: 'white',
-            fontSize: 18,
-            marginTop: 10,
-            textAlign: 'center'
-          }} >Donate to Orphanages, NGOs and Elderly Homes with ease</Text>
-          <TouchableOpacity style={styles?.button}
+        <View
+         className='mt-[30px] p-5'
+         >
+          <Text className='text-center text-lg text-white font-semibold pb-1 font-[poppins]'>Kind🩵Nest</Text>
+          <Text
+            className='text-4xl font-bold text-white text-center font-[poppins]'
+            >Empower Your Generosity !</Text>
+          <Text
+          className='text-white text-[15px] mt-2.5 text-center px-[10px] font-[poppins]'
+          >Donate to Orphanages, NGOs and Elderly Homes with ease</Text>
+          <TouchableOpacity
+            className='bg-white p-2.5 rounded-[99px] mt-[15px]'
             onPress={() => router.push('/login/SignIn')}
+
             >
             <Text style={{
-              textAlign: 'center',
-              fontSize: 16,
               color: Colors.PRIMARY
-            }}>Continue</Text>
+            }}
+            className='text-center text-lg font-[poppins]'
+            >Continue</Text>
           </TouchableOpacity>
-          <Text style ={{
-            color: 'white',
-            fontSize: 12,
-            marginTop: 10,
-            textAlign: 'center'
-          }}
-          >Note : By Clicking Continue button, you will agree to our terms and conditions</Text>
+          <Text
+          className='text-center text-white text-xs mt-3 font-[poppins]'
+          >Note : By Clicking Continue button, you will agree to our <Text className='underline'>terms and conditions </Text></Text>
         </View>
       </View>
-    </View>
   )
 }
 
 const styles = StyleSheet.create({
   image: {
-    width: 210,
-    height: 450,
-    borderRadius: 23,
-  },
-  button: {
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 99,
-    marginTop: 25,
+    width: 360,
+    height: 430,
   }
 })
 export default LoginScreen
