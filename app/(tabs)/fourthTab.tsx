@@ -11,8 +11,8 @@ const FourthTab = () => {
       exiting={FadeOut.duration(500)}
       className="flex-1 items-center justify-center bg-white"
     >
-      <Feather name="settings" size={24} color="#5DADE2" />
-      <Text className="text-2xl text-blue-300 mt-4">Settings</Text>
+      <Feather name="settings" size={24} color="#3C6E71" />
+      <Text className="text-2xl text-[#3C6E71] mt-4">Settings</Text>
     </AnimatedView>
   );
 };

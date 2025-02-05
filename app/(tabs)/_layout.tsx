@@ -110,7 +110,7 @@ const TabsLayout = () => {
       initialLayout={{ width: layout.width }}
       tabBarPosition="bottom"
       renderTabBar={() => (
-        <View style={{ flexDirection: "row", backgroundColor: "#5DADE2", paddingBottom: 10 }}>
+        <View style={{ flexDirection: "row", backgroundColor: "#3C6E71", paddingBottom: 10 }}>
           {routes.map((route, routeIndex) => {
             const isActive = index === routeIndex;
             return (
