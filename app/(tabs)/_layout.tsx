@@ -3,26 +3,38 @@ import { Ionicons } from '@expo/vector-icons'
 import React, { useEffect, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/config/FirebaseConfig';
+import { getLocalStorage } from '@/service/Storage';
 
 const TabLayout = () => {
   const router = useRouter();
 
-  const [authenticated,setAuthenticated] = useState<any>(null);
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      const uid = user.uid;
-      // console.log(uid)
-      setAuthenticated(true)
-    } else {
-      setAuthenticated(false)
-    }
-  });
+  // const [authenticated,setAuthenticated] = useState<any>(null);
+  // onAuthStateChanged(auth, (user) => {
+  //   if (user) {
+  //     const uid = user.uid;
+  //     // console.log(uid)
+  //     setAuthenticated(true)
+  //   } else {
+  //     setAuthenticated(false)
+  //   }
+  // });
+
+  // useEffect(() => {
+  //   if(authenticated==false) {
+  //     router?.push('/login')
+  //   }
+  // }, [authenticated])
 
   useEffect(() => {
-    if(authenticated==false) {
-      router?.push('/login')
+    GetUserDetail()
+  }, [])
+
+  const GetUserDetail = async()=> {
+    const userInfo = await getLocalStorage('userDetail')
+    if(!userInfo) {
+      router.replace('/login')
     }
-  }, [authenticated])
+  }
 
   return (
     <Tabs

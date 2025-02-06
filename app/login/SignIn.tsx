@@ -5,6 +5,7 @@ import Colors from '@/constants/Colors'
 import { useRouter } from 'expo-router'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/config/FirebaseConfig'
+import { setLocalStorage } from '@/service/Storage'
 
 const SignIn = () => {
 
@@ -21,9 +22,10 @@ const SignIn = () => {
       }
 
       signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async(userCredential) => {
         const user = userCredential.user;
         // console.log(user);
+        await setLocalStorage('userDetail', user)
         router.replace('/(tabs)')
 
       })
@@ -64,7 +66,7 @@ const SignIn = () => {
       </View>
 
       <TouchableOpacity style={styles?.button}
-       onPress={onSignInClick}
+        onPress={onSignInClick}
       >
         <Text style= {{
             textAlign: 'center',

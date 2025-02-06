@@ -23,18 +23,31 @@
 
 import { View, Text, Button } from 'react-native'
 import React from 'react'
-import { Redirect } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/config/FirebaseConfig'
+import { RemoveLocalStorage } from '@/service/Storage'
 
 const HomeScreen = () => {
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await RemoveLocalStorage('userDetail')
+      await signOut(auth)
+      router.replace('/login') // Redirect to login screen after logout
+    } catch (error) {
+      console.error('Logout Error:', error)
+    }
+  }
+
   return (
     <View className="flex-1 items-center justify-center bg-white">
       <Text className="text-lg font-bold">HomeScreen</Text>
-      {/* <Redirect href="/login" /> */}
-      <Button title='Logout' onPress={() => signOut(auth)}/>
+      <Button title="Logout" onPress={handleLogout} />
     </View>
   )
 }
 
 export default HomeScreen
+
