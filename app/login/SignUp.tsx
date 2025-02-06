@@ -1,13 +1,47 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native'
-import React from 'react'
+import { View, Text, TextInput, TouchableOpacity, ToastAndroid, Alert } from 'react-native'
+import React, { useState } from 'react'
 import { StyleSheet } from 'react-native'
 import Colors from '@/constants/Colors'
 import { useRouter } from 'expo-router'
+import {auth} from '@/config/FirebaseConfig'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 
 const SignUp = () => {
 
     const router = useRouter()
-    
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [userName, setUserName] = useState('');  
+    const OnCreateAccount = ()  => {
+
+      if(!email || !password || !userName) {
+        ToastAndroid.show('Please fill all details', ToastAndroid.BOTTOM)
+        Alert.alert('Please fill all details')
+        return;
+      }
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(async (userCredential) => {
+        
+        const user = userCredential.user;
+        await updateProfile(user, {
+          displayName: userName
+        })
+        // console.log(user);
+        router.replace('/(tabs)')
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode);
+        if(errorCode === 'auth/email-already-in-use') {
+            ToastAndroid.show('Email already exist', ToastAndroid.BOTTOM)
+        }
+        
+      });
+
+    }
+
   return (
 <View style= {{
         padding: 25,
@@ -20,22 +54,28 @@ const SignUp = () => {
       <Text>Full Name</Text>
         <TextInput
           style={styles?.textInput}
-          placeholder="Enter your full name"/>
-
+          placeholder="Enter your full name"
+          onChangeText={(value) => setUserName(value)}
+          />
         <Text>Email</Text>
         <TextInput
           style={styles?.textInput}
-          placeholder="Enter your email"/>
+          placeholder="Enter your email"
+          onChangeText={(value) => setEmail(value)}
+          />
 
         <Text>Password</Text>
         <TextInput
           style={styles?.textInput}
           placeholder="Enter your password"
-            secureTextEntry={true}
+          secureTextEntry={true}
+          onChangeText={(value) => setPassword(value)}
           />
       </View>
 
-      <TouchableOpacity style={styles?.button}>
+      <TouchableOpacity style={styles?.button}
+        onPress={OnCreateAccount}
+      >
         <Text style= {{
             textAlign: 'center',
             fontSize: 16,
