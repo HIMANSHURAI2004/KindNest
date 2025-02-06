@@ -2,11 +2,13 @@ import { View, Text, TextInput, TouchableOpacity, ToastAndroid, Alert } from 're
 import React, { useState } from 'react'
 import { StyleSheet } from 'react-native'
 import Colors from '@/constants/Colors'
-import { useRouter } from 'expo-router'
+import { Link, useRouter } from 'expo-router'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/config/FirebaseConfig'
 import { setLocalStorage } from '@/service/Storage'
-
+import Octicons from '@expo/vector-icons/Octicons';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 const SignIn = () => {
 
     const router = useRouter()
@@ -41,77 +43,108 @@ const SignIn = () => {
 
 
   return (
-    <View style= {{
-        padding: 25,
-    }}>
-      <Text style={styles?.textHeader}>Let's Sign You In !</Text>
-      <Text style={styles?.subText}>Welcome Back</Text>
-      <Text style={styles?.subText}>You've been missed</Text>
-      <View style={{marginTop: 25}}>
-
-        <Text>Email</Text>
-        <TextInput
-          style={styles?.textInput}
-          placeholder="Enter your email"
-          onChangeText={(value) => setEmail(value)}
-          />
-
-        <Text>Password</Text>
-        <TextInput
-          style={styles?.textInput}
-          placeholder="Enter your password"
-          secureTextEntry={true}
-          onChangeText={(value) => setPassword(value)}
-          />
-      </View>
-
-      <TouchableOpacity style={styles?.button}
-        onPress={onSignInClick}
+    <View
+    className='h-full w-full flex justify-center items-center'
+    >
+      <View className='h-[45%] rounded-b-3xl w-full relative'
+        style = {{
+          backgroundColor: Colors.PRIMARY,
+        }}
       >
-        <Text style= {{
-            textAlign: 'center',
-            fontSize: 16,
-            color: 'white'
-        }}>Login</Text>
-      </TouchableOpacity>
-      
+        <View className='absolute bottom-2 flex justify-center w-full px-10 py-4'>
+          <FontAwesome name="sign-in" size={35} color="white" />
+          <Text className='text-2xl font-bold text-left py-2 text-white font-[poppins]'>Sign In</Text>
+          <Text className='text-left py-1 pr-4 text-slate-300 font-[poppins]'>Please enter the required information to sign in <Text className='text-slate-100 font-medium'>KindNest</Text></Text>
+        </View>
+      </View>
+      <View className='h-[55%] w-full bg-white px-8'>
+        <TouchableOpacity
+            className='flex  justify-center items-center w-full py-4 gap-2'
+            style = {{
+              display: 'flex',
+              flexDirection: 'row',
+              padding: 15,
+              backgroundColor: 'white',
+              borderRadius: 10,
+              marginTop: 20,
+              borderWidth: 1,
+              borderColor: Colors.PRIMARY,
+            }}
+            onPress={() => router.push('/login/SignUp')
+          }>
+            <AntDesign name="google" size={24} color="teal" />
+            <Text style= {{
+                textAlign: 'center',
+                fontSize: 16,
+                color: Colors.PRIMARY
+            }}
+            className='font-[poppins]'
+            >Sign up with google</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles?.buttonCreate
-        } onPress={() => router.push('/login/SignUp')
-      }>
-        <Text style= {{
-            textAlign: 'center',
-            fontSize: 16,
-            color: Colors.PRIMARY
-        }}>Don't have an account? Sign Up</Text>
-      </TouchableOpacity>
+        <View className='flex justify-center items-center w-full pt-2 pb-2'
+          style = {{
+            display: 'flex',
+            flexDirection: 'row',
+          }}
+        >
+          <View className='h-[1px] bg-gray-300 w-[25%]' />
+          <Text className='font-medium py-1 px-2 text-slate-500 font-[poppins]'>or</Text>
+          <View className='h-[1px] bg-gray-300 w-[25%]' />
+        </View>
+
+        <View>
+          <Text className='font-medium pt-1 pb-0.5 pl-1 text-slate-700 font-[poppins]'>Email</Text>
+          <TextInput
+            style={styles?.textInput}
+            placeholder="Enter your email"
+            onChangeText={(value) => setEmail(value)}
+            className='font-[poppins]'
+
+            />
+          <Text className=' font-medium pt-1 pb-0.5 pl-1 text-slate-700 font-[poppins]'>Password</Text>
+          <TextInput
+            style={styles?.textInput}
+            placeholder="Enter your password"
+            secureTextEntry={true}
+            onChangeText={(value) => setPassword(value)}
+            className='font-[poppins]'
+            />
+        </View>
+
+        <TouchableOpacity style={styles?.button}
+        onPress={onSignInClick}
+        className='font-[poppins]'
+        >
+          <Text style= {{
+              textAlign: 'center',
+              fontSize: 16,
+              color: 'white'
+          }}>Login</Text>
+        </TouchableOpacity>
+        
+          <Link href='/login/SignUp' style= {{
+              textAlign: 'center',
+              fontSize: 13,
+              color: Colors.PRIMARY
+          }}
+          className='underline font-[poppins] pt-2'
+          >Don't have an account? Sign Up</Link>
+      </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-    textHeader: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        color: Colors.PRIMARY,
-        textAlign: 'center',
-    },
-    subText: {
-        color: Colors.GRAY,
-        fontSize: 30,
-        fontWeight: 'bold',
-        marginTop: 10,
-        textAlign: 'center'
-    },
     textInput: {
-        borderWidth: 1,
+        borderWidth: 0.5,
         borderColor: 'black',
-        padding: 10,
-        fontSize: 16,
+        padding: 8,
+        fontSize: 14,
         borderRadius: 10,
         marginTop: 5,
         backgroundColor: 'white',
-        marginBottom: 35,
+        marginBottom: 20,
     },
     button: {
         backgroundColor: Colors.PRIMARY,
