@@ -126,6 +126,12 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
+      <View className="items-center mb-6">
+        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('/realtime')}>
+          <Text className="text-white text-center text-lg font-semibold">Explore Database</Text>
+        </TouchableOpacity>
+      </View>
+
       <View className="items-center">
         <Button title="Logout" onPress={handleLogout} color="#e53e3e" />
       </View>

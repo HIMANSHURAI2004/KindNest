@@ -132,13 +132,18 @@ const SignUp = () => {
         }}>Sign up</Text>
       </TouchableOpacity>
       
-        <Link href='/login/SignIn' style= {{
+      <TouchableOpacity
+        onPress={() => router.push('/login/SignIn')}
+      >
+        <Text style= {{
             textAlign: 'center',
             fontSize: 13,
             color: Colors.PRIMARY
         }}
         className='underline font-[poppins] pt-2'
-        >Already have an account? Sign in</Link>
+        >Already have an account? Sign in</Text>
+      </TouchableOpacity>
+      
     </View>
   </View>
     )
