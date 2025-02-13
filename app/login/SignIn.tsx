@@ -46,18 +46,18 @@ const SignIn = () => {
     <View
     className='h-full w-full flex justify-center items-center'
     >
-      <View className='h-[45%] rounded-b-3xl w-full relative'
+      <View className='h-[40%] rounded-b-3xl w-full relative'
         style = {{
           backgroundColor: Colors.PRIMARY,
         }}
       >
         <View className='absolute bottom-2 flex justify-center w-full px-10 py-4'>
-          <FontAwesome name="sign-in" size={35} color="white" />
+          {/* <FontAwesome name="sign-in" size={35} color="white" /> */}
           <Text className='text-2xl font-bold text-left py-2 text-white font-[poppins]'>Sign In</Text>
           <Text className='text-left py-1 pr-4 text-slate-300 font-[poppins]'>Please enter the required information to sign in <Text className='text-slate-100 font-medium'>KindNest</Text></Text>
         </View>
       </View>
-      <View className='h-[55%] w-full bg-white px-8'>
+      <View className='h-[60%] w-full bg-white px-8 pt-5'>
         <TouchableOpacity
             className='flex  justify-center items-center w-full py-4 gap-2'
             style = {{
@@ -79,7 +79,7 @@ const SignIn = () => {
                 color: Colors.PRIMARY
             }}
             className='font-[poppins]'
-            >Sign up with google</Text>
+            >Sign in with google</Text>
         </TouchableOpacity>
 
         <View className='flex justify-center items-center w-full pt-2 pb-2'
@@ -134,7 +134,6 @@ const SignIn = () => {
     </View>
   )
 }
-
 const styles = StyleSheet.create({
     textInput: {
         borderWidth: 0.5,

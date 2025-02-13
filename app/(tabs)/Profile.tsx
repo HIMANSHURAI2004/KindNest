@@ -18,16 +18,54 @@
 // };
 
 // export default FourthTab;
-
-import { View, Text } from 'react-native'
+import { View, Text, Image, StyleSheet } from 'react-native'
+import { Asset } from 'expo-asset';
 import React from 'react'
 
 const ProfileScreen = () => {
   return (
-    <View>
-      <Text>ProfileScreen</Text>
+    <View style={styles.container}>
+      {/* Profile Picture */}
+      <View style={styles.profilePicContainer}>
+        <Image source={{ uri: require('@/assets/images/profile.jpg') }} style={styles.profilePic} />
+      </View>
+
+      {/* User Info */}
+      <Text style={styles.userName}>John Doe</Text>
+      <Text style={styles.userEmail}>johndoe@example.com</Text>
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+  },
+  profilePicContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#ddd', // Placeholder background
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  profilePic: {
+    width: '100%',
+    height: '100%',
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  userEmail: {
+    fontSize: 16,
+    color: 'gray',
+  },
+})
 
 export default ProfileScreen

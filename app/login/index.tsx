@@ -28,10 +28,10 @@ const LoginScreen = () => {
             className='text-4xl font-bold text-white text-center font-[poppins]'
             >Empower Your Generosity !</Text>
           <Text
-          className='text-white text-[15px] mt-2.5 text-center px-[10px] font-[poppins]'
+          className='text-white text-[15px] mt-2.5  text-center px-[10px] font-[poppins]'
           >Donate to Orphanages, NGOs and Elderly Homes with ease</Text>
           <TouchableOpacity
-            className='bg-white p-2.5 rounded-[99px] mt-[15px]'
+            className='bg-white p-2.5 rounded-[99px] mt-[20px]'
             onPress={() => router.push('/login/SignIn')}
 
             >
