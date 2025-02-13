@@ -18,54 +18,43 @@
 // };
 
 // export default FourthTab;
-import { View, Text, Image, StyleSheet } from 'react-native'
-import { Asset } from 'expo-asset';
-import React from 'react'
+import React from "react";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const ProfileScreen = () => {
+export default function ProfileScreen() {
   return (
-    <View style={styles.container}>
-      {/* Profile Picture */}
-      <View style={styles.profilePicContainer}>
-        <Image source={{ uri: require('@/assets/images/profile.jpg') }} style={styles.profilePic} />
-      </View>
+    <SafeAreaView className="flex-1 bg-teal items-center px-6">
+      {/* Profile Image */}
+      <View className="mt-10 w-24 h-24 bg-gray-300 rounded-full" />
 
       {/* User Info */}
-      <Text style={styles.userName}>John Doe</Text>
-      <Text style={styles.userEmail}>johndoe@example.com</Text>
-    </View>
-  )
+      <Text className="text-xl font-bold mt-4 text-gray-900">John Doe</Text>
+      <Text className="text-gray-700">johndoe@example.com</Text>
+
+      {/* Form Fields */}
+      <View className="w-full max-w-md mt-6 space-y-4">
+        <TextInput
+          className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
+          placeholder="John Doe"
+        />
+
+        <TextInput
+          className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
+          placeholder="johndoe@example.com"
+        />
+
+        <TextInput
+          className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
+          placeholder="Enter new password"
+          secureTextEntry
+        />
+      </View>
+
+      {/* Logout Button */}
+      <TouchableOpacity className="mt-6 w-full max-w-md bg-teal-500 py-3 rounded-md">
+        <Text className="text-white font-bold text-center">Log out</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-  },
-  profilePicContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#ddd', // Placeholder background
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  profilePic: {
-    width: '100%',
-    height: '100%',
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 10,
-  },
-  userEmail: {
-    fontSize: 16,
-    color: 'gray',
-  },
-})
-
-export default ProfileScreen
