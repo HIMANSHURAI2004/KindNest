@@ -57,6 +57,7 @@ import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/config/FirebaseConfig';
 import { RemoveLocalStorage } from '@/service/Storage';
+import AntDesign from '@expo/vector-icons/AntDesign';
 // import Header from '@/components/Header';
 
 const HomeScreen = () => {
@@ -81,6 +82,7 @@ const HomeScreen = () => {
         <Text className="text-2xl font-bold text-teal-700">Welcome to KindNest!</Text>
         <Text className="text-md text-gray-600 mt-2">Join us in spreading kindness to those in need.</Text>
       </View>
+      
 
   
       <View className="mb-6">
@@ -121,13 +123,13 @@ const HomeScreen = () => {
       </View>
 
       <View className="items-center mb-6">
-        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg">
+        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('../features/donations')}>
           <Text className="text-white text-center text-lg font-semibold">Make a Donation</Text>
         </TouchableOpacity>
       </View>
 
       <View className="items-center mb-6">
-        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('/realtime')}>
+        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('../features/contact')}>
           <Text className="text-white text-center text-lg font-semibold">Explore Database</Text>
         </TouchableOpacity>
       </View>
