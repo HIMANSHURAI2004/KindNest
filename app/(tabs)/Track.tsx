@@ -40,54 +40,61 @@ const TrackScreen = () => {
     let userLocation = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = userLocation.coords;
 
-    const googleMapsUrl : any = `https://www.google.com/maps/search/${encodeURIComponent(query)}/@${latitude},${longitude},14z`;
+    const googleMapsUrl: any = `https://www.google.com/maps/search/${encodeURIComponent(query)}/@${latitude},${longitude},14z`;
     router.push(googleMapsUrl);
   };
 
   return (
-    <ScrollView className="p-6 bg-white h-full">
-      {/* Header */}
-      <View className="my-6 items-center">
-        <Text className="text-2xl font-bold text-teal-700">Find Nearby Places</Text>
-        <Text className="text-md text-gray-600 mt-2 text-center">
-          Select a category to locate nearby places and contribute to kindness.
-        </Text>
-      </View>
+    <View className="flex-1 bg-white">
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }}>
+        {/* Header */}
+        <View className="items-center mb-10">
+          <Text className="text-3xl font-bold text-teal-700">Find Nearby Places</Text>
+          <Text className="text-lg text-gray-600 mt-2 text-center">
+            Select a category to locate nearby places and contribute to kindness.
+          </Text>
+        </View>
 
-      {/* Category Buttons */}
-      <View className="mb-6">
-        <Text className="text-xl font-semibold text-gray-800 mb-4">Choose a Category:</Text>
-
-        <View className="flex-row flex-wrap gap-4 justify-center">
-          <TouchableOpacity className="bg-white p-4 rounded-xl shadow-md w-[45%] items-center"
-            onPress={() => openGoogleMaps("Old Age Home")}>
-            <AntDesign name="home" size={40} color="#007AFF" />
-            <Text className="text-md font-medium mt-2">Old Age Homes</Text>
+        {/* Category Buttons in a single column */}
+        <View className="space-y-8 items-center">
+          <TouchableOpacity
+            className="bg-white py-8 px-6 rounded-xl shadow-md w-3/5 items-center mb-8"
+            onPress={() => openGoogleMaps("Old Age Home")}
+          >
+            <AntDesign name="home" size={50} color="#007AFF" />
+            <Text className="text-lg font-medium mt-3">Old Age Homes</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="bg-white p-4 rounded-xl shadow-md w-[45%] items-center"
-            onPress={() => openGoogleMaps("Orphanage")}>
-            <AntDesign name="smileo" size={40} color="#FF5733" />
-            <Text className="text-md font-medium mt-2">Orphanages</Text>
+          <TouchableOpacity
+            className="bg-white py-5 px-6 rounded-xl shadow-md w-3/5 items-center mb-8"
+            onPress={() => openGoogleMaps("Orphanage")}
+          >
+            <AntDesign name="smileo" size={50} color="#FF5733" />
+            <Text className="text-lg font-medium mt-3">Orphanages</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="bg-white p-4 rounded-xl shadow-md w-[45%] items-center"
-            onPress={() => openGoogleMaps("NGO")}>
-            <AntDesign name="team" size={40} color="#28A745" />
-            <Text className="text-md font-medium mt-2">NGOs</Text>
+          <TouchableOpacity
+            className="bg-white py-5 px-6 rounded-xl shadow-md w-3/5 items-center mb-8"
+            onPress={() => openGoogleMaps("NGO")}
+          >
+            <AntDesign name="team" size={50} color="#28A745" />
+            <Text className="text-lg font-medium mt-3">NGOs</Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Back to Home Button */}
-      <View className="items-center mb-6">
-        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg"
-          onPress={() => router.push("/")}>
-          <Text className="text-white text-center text-lg font-semibold">Back to Home</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        {/* Back to Home Button */}
+        <View className="items-center mt-10">
+          <TouchableOpacity
+            className="bg-teal-700 py-4 w-48 rounded-full shadow-lg"
+            onPress={() => router.push("/")}
+          >
+            <Text className="text-white text-center text-lg font-semibold">Back to Home</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 export default TrackScreen;
+
