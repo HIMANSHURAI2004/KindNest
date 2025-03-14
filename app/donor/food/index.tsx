@@ -17,6 +17,8 @@ import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
 import { ArrowLeft, Minus, Plus } from "react-native-feather"
 import { useRouter } from "expo-router"
+import { collection, addDoc } from "firebase/firestore";
+import { database } from "../../../config/FirebaseConfig";
 
 // Theme colors
 const THEME = {
@@ -153,31 +155,53 @@ const handleQuantityChange = (itemId: string, change: number) => {
     });
 };
 
-  const handleCheckout = () => {
-    // Check if any items are selected
-    const hasItems = Object.values(selectedItems).some((quantity) => quantity > 0)
+const handleCheckout = async () => {
+  // Check if any items are selected
+  const hasItems = Object.values(selectedItems).some((quantity) => quantity > 0);
 
-    if (!hasItems) {
-      Alert.alert("No items selected", "Please select at least one food item to donate.")
-      return
-    }
+  if (!hasItems) {
+    Alert.alert("No items selected", "Please select at least one food item to donate.");
+    return;
+  }
 
-    // Proceed with checkout
-    Alert.alert("Confirm Donation", `You're about to donate food worth ₹${totalAmount.toFixed(2)} Proceed?`, [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
+  Alert.alert(
+    "Confirm Donation",
+    `You're about to donate food worth ₹${totalAmount.toFixed(2)}. Proceed?`,
+    [
+      { text: "Cancel", style: "cancel" },
       {
         text: "Confirm",
-        onPress: () => {
-          // Handle payment processing
-          Alert.alert("Thank you!", "Your donation has been processed successfully.")
-          // navigation.navigate('DonationSuccess');
+        onPress: async () => {
+          try {
+            // Prepare order data
+            const orderData = {
+              Category : "Food",
+              items: Object.entries(selectedItems)
+                .filter(([_, quantity]) => quantity > 0)
+                .map(([id, quantity]) => {
+                  const item = foodItems.find((food) => food.id === id);
+                  return item ? { id, name: item.name, quantity, price: item.price } : null;
+                })
+                .filter(Boolean), // Remove null values
+              totalAmount,
+              paymentMethod: selectedPayment,
+              timestamp: new Date().toISOString(),
+            };
+
+            // Store in Firebase Firestore
+            await addDoc(collection(database, "orders"), orderData);
+
+            Alert.alert("Thank you!", "Your donation has been recorded successfully.");
+          } catch (error) {
+            console.error("Error storing order:", error);
+            Alert.alert("Error", "Something went wrong. Please try again.");
+          }
         },
       },
-    ])
-  }
+    ]
+  );
+};
+
 
   return (
     <SafeAreaView style={styles.container}>

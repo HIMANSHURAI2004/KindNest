@@ -18,6 +18,8 @@ import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
 import { ArrowLeft } from "react-native-feather"
 import { useRouter } from "expo-router"
+import { collection, addDoc } from "firebase/firestore";
+import { database } from "../../../config/FirebaseConfig";
 
 // Theme colors
 const THEME = {
@@ -76,31 +78,45 @@ export default function Money() {
   const [selectedPayment, setSelectedPayment] = useState("credit")
 
 
-  const handleCheckout = () => {
-    // Check if any items are selected
-    const hasAmount = amount > 0;
 
-    if (!hasAmount) {
+  const handleCheckout = async () => {
+    // Check if amount is greater than zero
+    if (amount <= 0) {
       Alert.alert("Amount cannot be zero", "Please select at least one rupee to donate.")
       return
     }
-
-    // Proceed with checkout
-    Alert.alert("Confirm Donation", `You're about to donate ₹${amount.toFixed(2)} Proceed?`, [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Confirm",
-        onPress: () => {
-          // Handle payment processing
-          Alert.alert("Thank you!", "Your donation has been processed successfully.")
-          // navigation.navigate('DonationSuccess');
+  
+    Alert.alert(
+      "Confirm Donation",
+      `You're about to donate ₹${amount.toFixed(2)} using ${selectedPayment}. Proceed?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Confirm",
+          onPress: async () => {
+            try {
+              // Prepare donation data
+              const donationData = {
+                Category : "Money",
+                amount,
+                paymentMethod: selectedPayment,
+                timestamp: new Date().toISOString(),
+              }
+  
+              // Store donation in Firestore
+              await addDoc(collection(database, "orders"), donationData)
+  
+              Alert.alert("Thank you!", "Your donation has been processed successfully.")
+            } catch (error) {
+              console.error("Error processing donation:", error)
+              Alert.alert("Error", "Something went wrong. Please try again.")
+            }
+          },
         },
-      },
-    ])
+      ]
+    )
   }
+  
 
   return (
     <SafeAreaView style={styles.container}>

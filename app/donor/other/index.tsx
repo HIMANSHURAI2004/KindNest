@@ -30,6 +30,8 @@ import {
   ChevronUp,
 } from 'react-native-feather';
 import { useRouter } from 'expo-router';
+import { collection, addDoc } from "firebase/firestore";
+import { database } from "../../../config/FirebaseConfig";
 
 // Theme colors
 const THEME = {
@@ -336,29 +338,45 @@ export default function Other() {
     
     return true;
   };
-
-  const handleScheduleDonation = () => {
-    if (validateForm()) {
-      Alert.alert(
-        'Confirm Donation',
-        `You're about to schedule a donation of ${totalItems} items for ${formatDate(selectedDate)} at ${selectedTimeSlot}. Proceed?`,
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
+  
+  const handleScheduleDonation = async () => {
+    if (!validateForm()) return
+  
+    Alert.alert(
+      "Confirm Donation",
+      `You're about to schedule a donation of ${totalItems} items for ${formatDate(selectedDate)} at ${selectedTimeSlot}. Proceed?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Confirm",
+          onPress: async () => {
+            try {
+              // Prepare donation data
+              const donationData = {
+                Category : "Others",
+                selectedItems,
+                totalItems,
+                pickupAddress,
+                dropAddress,
+                selectedDate: selectedDate.toISOString(),
+                selectedTimeSlot,
+                timestamp: new Date().toISOString(),
+              }
+  
+              // Store donation in Firestore
+              await addDoc(collection(database, "orders"), donationData)
+  
+              Alert.alert("Thank you!", "Your donation has been scheduled successfully.")
+            } catch (error) {
+              console.error("Error scheduling donation:", error)
+              Alert.alert("Error", "Something went wrong. Please try again.")
+            }
           },
-          {
-            text: 'Confirm',
-            onPress: () => {
-              // Handle donation scheduling
-              Alert.alert('Thank you!', 'Your donation has been scheduled successfully.');
-              router.replace('/(tabs)');
-            },
-          },
-        ]
-      );
-    }
-  };
+        },
+      ]
+    )
+  }
+  
 
   // Get count of items selected in a category
   interface CategoryItem {

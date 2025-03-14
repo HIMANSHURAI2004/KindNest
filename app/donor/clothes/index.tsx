@@ -30,6 +30,8 @@ import {
   ChevronRight,
 } from "react-native-feather"
 import { useRouter } from "expo-router"
+import { collection, addDoc } from "firebase/firestore";
+import { database } from "../../../config/FirebaseConfig";
 
 // Theme colors
 const THEME = {
@@ -338,25 +340,46 @@ export default function ClothesCategoryScreen() {
     return true
   }
 
-  const handleScheduleDonation = () => {
+  const handleScheduleDonation = async () => {
     if (validateForm()) {
       Alert.alert(
         "Confirm Donation",
         `You're about to schedule a donation of ${totalItems} clothing items for ${formatDate(selectedDate)} at ${selectedTimeSlot}. Proceed?`,
         [
-          {
-            text: "Cancel",
-            style: "cancel",
-          },
+          { text: "Cancel", style: "cancel" },
           {
             text: "Confirm",
-            onPress: () => {
-              // Handle donation scheduling
-              Alert.alert("Thank you!", "Your donation has been scheduled successfully.")
-              router.replace('/(tabs)');
+            onPress: async () => {
+              try {
+                // Prepare donation data
+                const donationData = {
+                  Category : "Clothes",
+                  items: Object.entries(selectedItems)
+                    .filter(([_, quantity]) => quantity > 0)
+                    .map(([id, quantity]) => {
+                      const item = clothingItems.find((clothing) => clothing.id === id)
+                      return item ? { id, name: item.name, quantity } : null
+                    })
+                    .filter(Boolean), // Remove null values
+                  totalItems,
+                  pickupAddress,
+                  dropAddress: dropAddress || "Not specified",
+                  selectedDate: selectedDate.toISOString(),
+                  selectedTimeSlot,
+                  timestamp: new Date().toISOString(),
+                }
+  
+                // Store donation in Firestore
+                await addDoc(collection(database, "orders"), donationData)
+  
+                Alert.alert("Thank you!", "Your clothing donation has been scheduled successfully.")
+              } catch (error) {
+                console.error("Error storing donation:", error)
+                Alert.alert("Error", "Something went wrong. Please try again.")
+              }
             },
           },
-        ],
+        ]
       )
     }
   }
