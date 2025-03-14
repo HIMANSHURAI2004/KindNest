@@ -52,20 +52,21 @@
 // export default HomeScreen
 
 import { View, Text, Button, Image, TouchableOpacity, ScrollView } from 'react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/config/FirebaseConfig';
-import { RemoveLocalStorage } from '@/service/Storage';
+import { getLocalStorage, RemoveLocalStorage } from '@/service/Storage';
 import AntDesign from '@expo/vector-icons/AntDesign';
 // import Header from '@/components/Header';
 
 const HomeScreen = () => {
   const router = useRouter();
-
+  
   const handleLogout = async () => {
     try {
       await RemoveLocalStorage('userDetail');
+      await RemoveLocalStorage('role');
       await signOut(auth);
       router.replace('/login/SignIn'); 
     } catch (error) {
@@ -129,11 +130,15 @@ const HomeScreen = () => {
       </View>
 
       <View className="items-center mb-6">
-        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('../features/contact')}>
-          <Text className="text-white text-center text-lg font-semibold">Explore Database</Text>
+        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('../donor')}>
+          <Text className="text-white text-center text-lg font-semibold">Back to Donor</Text>
         </TouchableOpacity>
       </View>
-
+      <View className="items-center mb-6">
+        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('../category')}>
+          <Text className="text-white text-center text-lg font-semibold">Role selection</Text>
+        </TouchableOpacity>
+      </View>
       <View className="items-center">
         <Button title="Logout" onPress={handleLogout} color="#e53e3e" />
       </View>

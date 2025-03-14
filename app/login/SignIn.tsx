@@ -28,7 +28,7 @@ const SignIn = () => {
         const user = userCredential.user;
         // console.log(user);
         await setLocalStorage('userDetail', user)
-        router.replace('/(tabs)')
+        router.replace('/category')
 
       })
       .catch((error) => {

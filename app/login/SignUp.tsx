@@ -30,7 +30,7 @@ const SignUp = () => {
         })
         await setLocalStorage('userDetail', user)
         // console.log(user);
-        router.replace('/(tabs)')
+        router.replace('/category')
       })
       .catch((error) => {
         const errorCode = error.code;
