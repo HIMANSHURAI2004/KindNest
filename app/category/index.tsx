@@ -34,7 +34,7 @@ export default function CategorySelection() {
 
   const selectRole = async (role: SelectRoleParams["role"]): Promise<void> => {
     await setLocalStorage("role", role);
-    router.replace(role === "donor" ? "/donor" : "/(tabs)");
+    router.replace(role === "donor" ? "/donor" : "/recipient");
   };
 
   return (
