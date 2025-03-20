@@ -13,6 +13,7 @@ import {
   Alert,
   TextInput,
   Modal,
+  FlatList,
 } from "react-native"
 import { Image } from "expo-image"
 import { LinearGradient } from "expo-linear-gradient"
@@ -32,6 +33,7 @@ import {
 import { useRouter } from "expo-router"
 import { collection, addDoc } from "firebase/firestore";
 import { database } from "../../../config/FirebaseConfig";
+import axios from "axios";
 
 // Theme colors
 const THEME = {
@@ -45,6 +47,7 @@ const THEME = {
   text: "#333333",
   textLight: "#ffffff",
   textMuted: "#7c8a97",
+  inputBorder: "#e0e0e0",
 }
 
 // Clothing items data
@@ -147,6 +150,47 @@ export default function ClothesCategoryScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("")
   const [showDatePicker, setShowDatePicker] = useState(false)
+
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  const fetchLocations = async (text: string) => {
+    setQuery(text);
+    if (text.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+  
+    try {
+      const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
+        params: {
+          q: text,
+          format: "json",
+          addressdetails: 1,
+          limit: 5,
+          countrycodes: "IN", 
+        },
+        headers: {
+          // Required headers for Nominatim usage policy
+          "User-Agent": "Your-App-Name/1.0 (your@email.com)",
+          "Referer": "https://yourdomain.com",
+          "Accept-Language": "en-US,en;q=0.9",
+        }
+      });
+      
+      setSuggestions(response.data);
+    } catch (error) {
+      console.error("Error fetching locations: ", error);
+      Alert.alert("Error", "Could not fetch locations. Please try again later.");
+    }
+  };
+
+  const handleSelectLocation = (location: any) => {
+    setQuery(location.display_name);
+    setPickupAddress(location.display_name);
+    setSuggestions([]);
+  };
+  
 
     // Helper functions for date handling
     const isToday = (date: Date): boolean => {
@@ -312,6 +356,7 @@ export default function ClothesCategoryScreen() {
     setSelectedDate(day.date)
     setShowDatePicker(false)
   }
+  
 
   const formatDate = (date: Date): string => {
     const options: Intl.DateTimeFormatOptions = { weekday: "short", month: "short", day: "numeric" }
@@ -370,7 +415,7 @@ export default function ClothesCategoryScreen() {
                 }
   
                 // Store donation in Firestore
-                await addDoc(collection(database, "orders"), donationData)
+                await addDoc(collection(database, "Clothing Donations"), donationData)
   
                 Alert.alert("Thank you!", "Your clothing donation has been scheduled successfully.")
               } catch (error) {
@@ -458,11 +503,28 @@ export default function ClothesCategoryScreen() {
               <TextInput
                 style={styles.locationInput}
                 placeholder="Enter pickup address"
-                value={pickupAddress}
-                onChangeText={setPickupAddress}
+                value={query}
+                onChangeText={fetchLocations}
                 placeholderTextColor={THEME.textMuted}
               />
             </View>
+
+
+            {suggestions.length > 0 && (
+              <FlatList
+                data={suggestions}
+                keyExtractor={(item) => item.place_id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.suggestion} 
+                    onPress={() => handleSelectLocation(item)}
+                  >
+                    <Text style={styles.suggestionText}>{item.display_name}</Text>
+                  </TouchableOpacity>
+                )}
+                style={styles.suggestionsList}
+              />
+            )}
 
             {/* Drop Address (Optional) */}
             <View style={styles.locationInputContainer}>
@@ -1026,6 +1088,21 @@ const styles = StyleSheet.create({
   datePickerConfirmText: {
     color: THEME.textLight,
     fontWeight: "500",
+  },
+  suggestionsList: {
+    maxHeight: 150,
+    backgroundColor: THEME.background,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  suggestion: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.inputBorder,
+  },
+  suggestionText: {
+    color: THEME.text,
+    fontSize: 14,
   },
 })
 

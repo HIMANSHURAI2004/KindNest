@@ -364,7 +364,7 @@ export default function Other() {
               }
   
               // Store donation in Firestore
-              await addDoc(collection(database, "orders"), donationData)
+              await addDoc(collection(database, "Other donations"), donationData)
   
               Alert.alert("Thank you!", "Your donation has been scheduled successfully.")
             } catch (error) {

@@ -55,11 +55,11 @@ const TabLayout = () => {
         }} 
       />
       <Tabs.Screen 
-        name="Donate" 
+        name="Events" 
         options={{ 
-          tabBarLabel: 'Donate',
+          tabBarLabel: 'Event',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart" size={size} color={color} />
+            <Ionicons name="calendar" size={size} color={color} />
           ),
         }} 
       />

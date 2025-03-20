@@ -104,7 +104,7 @@ export default function Money() {
               }
   
               // Store donation in Firestore
-              await addDoc(collection(database, "orders"), donationData)
+              await addDoc(collection(database, "Monetary Donations"), donationData)
   
               Alert.alert("Thank you!", "Your donation has been processed successfully.")
             } catch (error) {
