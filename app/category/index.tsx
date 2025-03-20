@@ -40,6 +40,7 @@ export default function CategorySelection() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={THEME.primary} />
+      <Image source={require("@/assets/images/logo.png")} style={styles.logoImage} contentFit="contain" />
       <Text style={styles.heading}>Choose Your Role</Text>
       <Text style={styles.subHeading}>Help us understand how you want to contribute.</Text>
       
@@ -69,7 +70,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: THEME.primaryLight,
+    backgroundColor: THEME.primary,
     paddingHorizontal: 24,
   },
   heading: {
@@ -125,6 +126,10 @@ const styles = StyleSheet.create({
   othersItemImage: {
     width: 50,
     height: 50,
+  },
+  logoImage: {
+    width: 100,
+    height: 100,
   },
 });
 

@@ -9,6 +9,7 @@ import { setLocalStorage } from '@/service/Storage'
 import Octicons from '@expo/vector-icons/Octicons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Image } from 'expo-image'
 const SignIn = () => {
 
     const router = useRouter()
@@ -53,6 +54,7 @@ const SignIn = () => {
       >
         <View className='absolute bottom-2 flex justify-center w-full px-10 py-4'>
           {/* <FontAwesome name="sign-in" size={35} color="white" /> */}
+          <Image source={require("@/assets/images/logo.png")} style={styles.logoImage} contentFit="contain" />
           <Text className='text-2xl font-bold text-left py-2 text-white font-[poppins]'>Sign In</Text>
           <Text className='text-left py-1 pr-4 text-slate-300 font-[poppins]'>Please enter the required information to sign in <Text className='text-slate-100 font-medium'>KindNest</Text></Text>
         </View>
@@ -159,7 +161,11 @@ const styles = StyleSheet.create({
         marginTop: 15,
         borderWidth: 1,
         borderColor: Colors.PRIMARY,
-    }
+    },
+    logoImage: {
+      width: 70,
+      height: 70,
+    },
 })
 
 export default SignIn

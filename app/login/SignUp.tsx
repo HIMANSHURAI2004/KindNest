@@ -7,6 +7,7 @@ import {auth} from '@/config/FirebaseConfig'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { setLocalStorage } from '@/service/Storage'
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { Image } from 'expo-image'
 const SignUp = () => {
 
     const router = useRouter()
@@ -54,6 +55,7 @@ const SignUp = () => {
       }}
     >
       <View className='absolute bottom-2 flex justify-center w-full px-10 py-4'>
+        <Image source={require("@/assets/images/logo.png")} style={styles.logoImage} contentFit="contain" />
         <Text className='text-2xl font-bold text-left py-2 text-white font-[poppins]'>Create an account</Text>
         <Text className='text-left py-1 pr-4 text-slate-300 font-[poppins]'>Welcome! Please enter your details.</Text>
       </View>
@@ -174,6 +176,10 @@ const SignUp = () => {
               marginTop: 15,
               borderWidth: 1,
               borderColor: Colors.PRIMARY,
+          },
+          logoImage: {
+            width: 70,
+            height: 70,
           }
   })
 
