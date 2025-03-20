@@ -415,7 +415,7 @@ export default function ClothesCategoryScreen() {
                 }
   
                 // Store donation in Firestore
-                await addDoc(collection(database, "orders"), donationData)
+                await addDoc(collection(database, "Clothing Donations"), donationData)
   
                 Alert.alert("Thank you!", "Your clothing donation has been scheduled successfully.")
               } catch (error) {

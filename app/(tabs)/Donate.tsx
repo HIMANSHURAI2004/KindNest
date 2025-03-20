@@ -106,96 +106,97 @@ const DonationForm = () => {
   };
 
   return (
-    <ScrollView className="p-6 bg-white h-full">
-      <View className="my-6">
-        <Text className="text-2xl font-bold text-teal-700">Make a Donation</Text>
-        <Text className="text-md text-gray-600 mt-2">
-          Contribute to a cause and make a difference!
-        </Text>
-      </View>
-
-      <Text className="text-lg font-semibold text-gray-800 mb-2">Your Name</Text>
-      <TextInput
-        placeholder="Enter your name"
-        value={name}
-        onChangeText={setName}
-        className="border border-gray-300 p-3 rounded-lg mb-4"
-      />
-
-      <Text className="text-lg font-semibold text-gray-800 mb-2">Category</Text>
-      <View className="border border-gray-300 rounded-lg">
-        <Picker selectedValue={category} onValueChange={setCategory}>
-          <Picker.Item label="Food" value="Food" />
-          <Picker.Item label="Clothes" value="Clothes" />
-          <Picker.Item label="Toys" value="Toys" />
-          <Picker.Item label="Miscellaneous" value="Miscellaneous" />
-          <Picker.Item label="Money" value="Money" />
-        </Picker>
-      </View>
-
-      {category === "Money" && (
-        <>
-          <Text className="text-lg font-semibold text-gray-800 mt-4">Donation Amount</Text>
+    <FlatList
+      ListHeaderComponent={
+        <View className="p-6 bg-white">
+          <Text className="text-2xl font-bold text-teal-700">Make a Donation</Text>
+          <Text className="text-md text-gray-600 mt-2">
+            Contribute to a cause and make a difference!
+          </Text>
+  
+          {/* Form Fields */}
+          <Text className="text-lg font-semibold text-gray-800 mb-2">Your Name</Text>
           <TextInput
-            placeholder="Enter amount"
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="numeric"
-            className="border border-gray-300 p-3 rounded-lg mt-2"
+            placeholder="Enter your name"
+            value={name}
+            onChangeText={setName}
+            className="border border-gray-300 p-3 rounded-lg mb-4"
           />
-        </>
-      )}
-
-      {category === "Miscellaneous" && (
-        <>
-          <Text className="text-lg font-semibold text-gray-800 mt-4">Description</Text>
-          <TextInput
-            placeholder="Describe your donation"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            className="border border-gray-300 p-3 rounded-lg mt-2 h-24"
-          />
-        </>
-      )}
-
-      <TouchableOpacity 
-        className="bg-teal-700 p-4 rounded-full shadow-lg mt-6"
-        onPress={handleSubmit}
-      >
-        <Text className="text-white text-center text-lg font-semibold">
-          {editingId ? "Update Donation" : "Donate Now"}
-        </Text>
-      </TouchableOpacity>
-
-      {loading && <ActivityIndicator size="large" color="blue" className="mt-4" />}
-
-      <Text className="text-xl font-semibold text-gray-800 mt-8 mb-4">Your Donations</Text>
-      <FlatList
-        data={donations}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View className="bg-white p-4 rounded-xl shadow-md mb-3 flex-row justify-between">
-            <View>
-              <Text className="text-md font-medium">{item.category} Donation</Text>
-              <Text className="text-sm text-gray-500">
-                {item.name} {item.amount ? `- $${item.amount}` : ""}
-              </Text>
-              {item.description && <Text className="text-sm text-gray-400">{item.description}</Text>}
-            </View>
-            <View className="flex-row">
-              <TouchableOpacity onPress={() => handleEdit(item)} className="mr-4">
-                <AntDesign name="edit" size={22} color="blue" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                <AntDesign name="delete" size={22} color="red" />
-              </TouchableOpacity>
-            </View>
+  
+          <Text className="text-lg font-semibold text-gray-800 mb-2">Category</Text>
+          <View className="border border-gray-300 rounded-lg">
+            <Picker selectedValue={category} onValueChange={setCategory}>
+              <Picker.Item label="Food" value="Food" />
+              <Picker.Item label="Clothes" value="Clothes" />
+              <Picker.Item label="Toys" value="Toys" />
+              <Picker.Item label="Miscellaneous" value="Miscellaneous" />
+              <Picker.Item label="Money" value="Money" />
+            </Picker>
           </View>
-        )}
-      />
-    </ScrollView>
+  
+          {category === "Money" && (
+            <>
+              <Text className="text-lg font-semibold text-gray-800 mt-4">Donation Amount</Text>
+              <TextInput
+                placeholder="Enter amount"
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+                className="border border-gray-300 p-3 rounded-lg mt-2"
+              />
+            </>
+          )}
+  
+          {category === "Miscellaneous" && (
+            <>
+              <Text className="text-lg font-semibold text-gray-800 mt-4">Description</Text>
+              <TextInput
+                placeholder="Describe your donation"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                className="border border-gray-300 p-3 rounded-lg mt-2 h-24"
+              />
+            </>
+          )}
+  
+          <TouchableOpacity 
+            className="bg-teal-700 p-4 rounded-full shadow-lg mt-6"
+            onPress={handleSubmit}
+          >
+            <Text className="text-white text-center text-lg font-semibold">
+              {editingId ? "Update Donation" : "Donate Now"}
+            </Text>
+          </TouchableOpacity>
+  
+          {loading && <ActivityIndicator size="large" color="blue" className="mt-4" />}
+  
+          <Text className="text-xl font-semibold text-gray-800 mt-8 mb-4">Your Donations</Text>
+        </View>
+      }
+      data={donations}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <View className="bg-white p-4 rounded-xl shadow-md mb-3 flex-row justify-between">
+          <View>
+            <Text className="text-md font-medium">{item.category} Donation</Text>
+            <Text className="text-sm text-gray-500">
+              {item.name} {item.amount ? `- $${item.amount}` : ""}
+            </Text>
+            {item.description && <Text className="text-sm text-gray-400">{item.description}</Text>}
+          </View>
+          <View className="flex-row">
+            <TouchableOpacity onPress={() => handleEdit(item)} className="mr-4">
+              <AntDesign name="edit" size={22} color="blue" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDelete(item.id)}>
+              <AntDesign name="delete" size={22} color="red" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    />
   );
-};
+}
 
 export default DonationForm;

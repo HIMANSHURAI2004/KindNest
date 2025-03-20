@@ -189,7 +189,7 @@ const handleCheckout = async () => {
             };
 
             // Store in Firebase Firestore
-            await addDoc(collection(database, "orders"), orderData);
+            await addDoc(collection(database, "Food Donations"), orderData);
 
             Alert.alert("Thank you!", "Your donation has been recorded successfully.");
           } catch (error) {
