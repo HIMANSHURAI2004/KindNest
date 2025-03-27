@@ -1,0 +1,14 @@
+{
+    "cli": {
+      "version": ">=0.55.1"
+    },
+    "build": {
+      "development": {
+        "distribution": "internal",
+        "android": {
+          "buildType": "apk"
+        }
+      }
+    }
+  }
+  
