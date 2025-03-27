@@ -86,7 +86,7 @@ const HomeScreen = () => {
       
 
   
-      {/* <View className="mb-6">
+      <View className="mb-6">
         <Text className="text-xl font-semibold text-gray-800 mb-4">Donate to:</Text>
         <View className="flex-row flex-wrap gap-4">
           <TouchableOpacity className="bg-white p-4 rounded-xl shadow-md w-[45%] items-center">
@@ -121,7 +121,7 @@ const HomeScreen = () => {
           <Text className="text-md font-medium">Clothes Donation</Text>
           <Text className="text-sm text-gray-500">You donated 5 jackets on Jan 15</Text>
         </View>
-      </View> */}
+      </View>
 
       <View className="items-center mb-6">
         <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('../features/donations')}>
