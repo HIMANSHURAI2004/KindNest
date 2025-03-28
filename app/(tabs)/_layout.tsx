@@ -86,7 +86,7 @@ const TabLayout = () => {
         options={{ 
           tabBarLabel: 'Chat',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bookmark" size={size} color={color} />
+            <Ionicons name="logo-wechat" size={size} color={color} />
           ),
         }} 
       />

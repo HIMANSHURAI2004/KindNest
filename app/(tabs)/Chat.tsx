@@ -4,7 +4,8 @@ import { GiftedChat, Bubble, Send } from "react-native-gifted-chat";
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, deleteDoc, getDocs } from "firebase/firestore";
 import { database as db } from "../../config/FirebaseConfig"; // Ensure Firebase is properly configured
 import OpenAI from "openai";
-import Ionicons from "react-native-vector-icons/Ionicons"; 
+import Ionicons from "react-native-vector-icons/Ionicons";
+import Markdown from 'react-native-markdown-display'; 
 
 const AIAssistantScreen = () => {
     interface Message {
@@ -30,7 +31,7 @@ const AIAssistantScreen = () => {
   const AIModel = async (prompt: string) => {
     try {
       const response = await openai.chat.completions.create({
-        model: "google/gemini-2.5-pro-exp-03-25:free",
+        model: "deepseek/deepseek-chat-v3-0324:free",
         messages: [{ role: "user", content: prompt }],
       });
 
@@ -114,6 +115,18 @@ const AIAssistantScreen = () => {
     }
   };
 
+  interface RenderMessageTextProps {
+    currentMessage: {
+      text: string;
+    };
+  }
+
+  const renderMessageText = (props: RenderMessageTextProps) => (
+    <Markdown>
+      {props.currentMessage.text}
+    </Markdown>
+  );
+
   return (
     <View style={styles.container}>
         {/* 🔹 Clear Chat Button */}
@@ -132,14 +145,19 @@ const AIAssistantScreen = () => {
               wrapperStyle={{
                 right: {
                   backgroundColor: "#179898", // Change this to any color you want (e.g., green)
+                  paddingHorizontal : 5,
                 },
                 left: {
                   backgroundColor: "#E0E0E0", // AI response background color (e.g., light gray)
+                  paddingHorizontal : 8,
+                  paddingVertical : 3,
                 },
               }}
               textStyle={{
                 right: {
-                  color: "#fff", // Text color for user messages
+                  color: "#ffffff",
+                  alignSelf : "center",
+                   // Text color for user messages
                 },
                 left: {
                   color: "#000", // Text color for AI messages
@@ -153,6 +171,7 @@ const AIAssistantScreen = () => {
               <Text style={styles.sendText}>Send</Text>
             </Send>
           )}
+        renderMessageText={renderMessageText} // 🔹 Render markdown text
         />
       </View>
     );

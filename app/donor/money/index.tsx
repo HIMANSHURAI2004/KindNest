@@ -20,6 +20,7 @@ import { ArrowLeft } from "react-native-feather"
 import { useRouter } from "expo-router"
 import { collection, addDoc } from "firebase/firestore";
 import { database } from "../../../config/FirebaseConfig";
+import QRCode from "react-native-qrcode-svg"
 
 // Theme colors
 const THEME = {
@@ -76,7 +77,29 @@ export default function Money() {
   const router = useRouter()
   const [amount, setAmount] = useState(0)
   const [selectedPayment, setSelectedPayment] = useState("credit")
+  const [cardNumber, setCardNumber] = useState("")
+  const [expiryDate, setExpiryDate] = useState("")
+  const [cvv, setCvv] = useState("")
+  
+  const validateCardDetails = () => {
+    const cardRegex = /^\d{16}$/
+    const expiryRegex = /^(0[1-9]|1[0-2])\/\d{2}$/
+    const cvvRegex = /^\d{3}$/
 
+    if (!cardRegex.test(cardNumber)) {
+      Alert.alert("Invalid Card", "Card number must be 16 digits.")
+      return false
+    }
+    if (!expiryRegex.test(expiryDate)) {
+      Alert.alert("Invalid Expiry Date", "Expiry date must be in MM/YY format.")
+      return false
+    }
+    if (!cvvRegex.test(cvv)) {
+      Alert.alert("Invalid CVV", "CVV must be 3 digits.")
+      return false
+    }
+    return true
+  }
 
 
   const handleCheckout = async () => {
@@ -116,6 +139,9 @@ export default function Money() {
       ]
     )
   }
+
+    const upiId = "KindNest@upi" // Replace with actual UPI ID
+  const upiQrData = `upi://pay?pa=${upiId}&pn=KindNest&am=${amount}&cu=INR`
   
 
   return (
@@ -200,6 +226,46 @@ export default function Money() {
             })}
           </View>
         </View>
+        {/* Show QR Code for UPI Payment */}
+        {selectedPayment === "upi" && amount > 0 && (
+          <View style={styles.qrContainer}>
+            <Text style={styles.qrTitle}>Scan this QR Code to Pay via UPI</Text>
+            <QRCode value={upiQrData} size={200} />
+          </View>
+        )}
+
+        {/* Show Credit Card Input Fields if Credit Card is Selected */}
+        {selectedPayment === "credit" && (
+          <View style={styles.creditCardContainer}>
+            <Text style={styles.creditCardTitle}>Enter Card Details</Text>
+            <TextInput
+              style={styles.cardInput}
+              onChangeText={setCardNumber}
+              value={cardNumber}
+              keyboardType="numeric"
+              placeholder="Card Number (16 digits)"
+              maxLength={16}
+            />
+            <TextInput
+              style={styles.cardInput}
+              onChangeText={setExpiryDate}
+              value={expiryDate}
+              keyboardType="numeric"
+              placeholder="Expiry Date (MM/YY)"
+              maxLength={5}
+            />
+            <TextInput
+              style={styles.cardInput}
+              onChangeText={setCvv}
+              value={cvv}
+              keyboardType="numeric"
+              placeholder="CVV (3 digits)"
+              maxLength={3}
+              secureTextEntry
+            />
+          </View>
+        )}
+
 
         {/* Summary Section */}
         <View style={styles.summaryContainer}>
@@ -465,6 +531,36 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: THEME.textLight,
     fontFamily: "poppins-medium",
+  },
+  qrContainer: { alignItems: "center", marginTop: 20 },
+  qrTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 10 },
+  creditCardContainer: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  creditCardTitle: {
+    fontSize: 16,
+    fontFamily: "poppins-bold",
+    color: THEME.text,
+    marginBottom: 12,
+  },
+  cardInput: {
+    height: 50,
+    borderColor: THEME.primaryDark,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    fontSize: 16,
+    fontFamily: "poppins-medium",
+    backgroundColor: THEME.card,
   },
 })
 
