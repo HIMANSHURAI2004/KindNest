@@ -7,24 +7,6 @@ import { getLocalStorage } from '@/service/Storage';
 
 const TabLayout = () => {
   const router = useRouter();
-
-  // const [authenticated,setAuthenticated] = useState<any>(null);
-  // onAuthStateChanged(auth, (user) => {
-  //   if (user) {
-  //     const uid = user.uid;
-  //     // console.log(uid)
-  //     setAuthenticated(true)
-  //   } else {
-  //     setAuthenticated(false)
-  //   }
-  // });
-
-  // useEffect(() => {
-  //   if(authenticated==false) {
-  //     router?.push('/login')
-  //   }
-  // }, [authenticated])
-
   useEffect(() => {
     GetUserDetail()
   }, [])
@@ -40,9 +22,25 @@ const TabLayout = () => {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1f6969', 
-        tabBarInactiveTintColor: '#666', 
-        tabBarStyle: { backgroundColor: '#f8f8f8' },
+        tabBarActiveTintColor: '#00A9A5', 
+        tabBarInactiveTintColor: '#ffffff', 
+        tabBarStyle: {
+          backgroundColor: '#092327',
+          borderTopWidth: 0,
+          position: 'absolute', 
+          bottom: 20,
+          height:55,
+          paddingHorizontal:5,
+          marginHorizontal: 12,
+          borderRadius: 20,
+        },
+        tabBarItemStyle: {
+          borderRadius: 15, 
+          
+          // backgroundColor: '#A8E353',
+          marginVertical: 5,
+          marginHorizontal: 4,
+        },
       }}
     >
       <Tabs.Screen 

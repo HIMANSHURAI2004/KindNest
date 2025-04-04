@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from "react-native";
 import { setLocalStorage, getLocalStorage } from "@/service/Storage";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { database } from "@/config/FirebaseConfig";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 const THEME = {
   primary: "#1f6969",
@@ -16,26 +18,24 @@ const THEME = {
 };
 
 export default function CategorySelection() {
+  
   const router = useRouter();
 
-  // useEffect(() => {
-  //   const checkRole = async () => {
-  //     const storedRole = await getLocalStorage("role");
-  //     if (storedRole) {
-  //       router.replace(storedRole === "donor" ? "donor" : "/(tabs)");
-  //     }
-  //   };
-  //   checkRole();
-  // }, []);
+  const selectRole = async (role: "donor" | "recipient") => {
+    const storedUser = await getLocalStorage("userDetail");
+    if (!storedUser || !storedUser.uid) return;
 
-  interface SelectRoleParams {
-    role: "donor" | "recipient";
-  }
+    const userId = storedUser.uid;
+    if (!userId) return;
 
-  const selectRole = async (role: SelectRoleParams["role"]): Promise<void> => {
-    await setLocalStorage("role", role);
+    const userRef = doc(database, "users", userId);
+    await updateDoc(userRef, { category: role });
+
+    await setLocalStorage("category", role);
     router.replace(role === "donor" ? "/donor" : "/recipient");
   };
+
+
 
   return (
     <SafeAreaView style={styles.container}>

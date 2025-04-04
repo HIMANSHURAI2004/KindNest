@@ -4,12 +4,13 @@ import { StyleSheet } from 'react-native'
 import Colors from '@/constants/Colors'
 import { Link, useRouter } from 'expo-router'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '@/config/FirebaseConfig'
+import { auth, database } from '@/config/FirebaseConfig'
 import { setLocalStorage } from '@/service/Storage'
 import Octicons from '@expo/vector-icons/Octicons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Image } from 'expo-image'
+import { doc, getDoc } from 'firebase/firestore'
 const SignIn = () => {
 
     const router = useRouter()
@@ -29,7 +30,18 @@ const SignIn = () => {
         const user = userCredential.user;
         // console.log(user);
         await setLocalStorage('userDetail', user)
-        router.replace('/category')
+        const userRef = doc(database, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+    
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            if (userData.category) {
+              await setLocalStorage("category",userData.category);
+              router.replace(userData.category === "donor" ? "/donor" : "/recipient");
+              return;
+            }
+          }
+          else router.replace('/category')
 
       })
       .catch((error) => {

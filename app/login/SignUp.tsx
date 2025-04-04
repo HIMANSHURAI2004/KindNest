@@ -3,11 +3,13 @@ import React, { useState } from 'react'
 import { StyleSheet } from 'react-native'
 import Colors from '@/constants/Colors'
 import { Link, useRouter } from 'expo-router'
-import {auth} from '@/config/FirebaseConfig'
+import {auth, database} from '@/config/FirebaseConfig'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { setLocalStorage } from '@/service/Storage'
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Image } from 'expo-image'
+import { setDoc, doc } from 'firebase/firestore';
+
 const SignUp = () => {
 
     const router = useRouter()
@@ -15,35 +17,41 @@ const SignUp = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [userName, setUserName] = useState('');  
-    const OnCreateAccount = ()  => {
-
-      if(!email || !password || !userName) {
-        ToastAndroid.show('Please fill all details', ToastAndroid.BOTTOM)
-        Alert.alert('Please fill all details')
-        return;
+    
+    const OnCreateAccount = async () => {
+      if (!email || !password || !userName) {
+          ToastAndroid.show('Please fill all details', ToastAndroid.BOTTOM);
+          Alert.alert('Please fill all details');
+          return;
       }
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(async (userCredential) => {
-        
-        const user = userCredential.user;
-        await updateProfile(user, {
-          displayName: userName
-        })
-        await setLocalStorage('userDetail', user)
-        // console.log(user);
-        router.replace('/category')
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(errorCode);
-        if(errorCode === 'auth/email-already-in-use') {
-            ToastAndroid.show('Email already exist', ToastAndroid.BOTTOM)
-        }
-        
-      });
 
-    }
+      try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+          
+          await updateProfile(user, { displayName: userName });
+          
+          // Store user details in Firestore
+          await setDoc(doc(database, 'users', user.uid), {
+              uid: user.uid,
+              displayName: userName,
+              email: user.email,
+              createdAt: new Date(),
+          });
+          
+          await setLocalStorage('userDetail', user);
+          router.replace('/category');
+      } catch (error:any) {
+          console.error(error.code);
+          if (error.code === 'auth/email-already-in-use') {
+              ToastAndroid.show('Email already exists', ToastAndroid.BOTTOM);
+          } else {
+              Alert.alert('Error', error.message);
+          }
+      }
+  };
+  
+
 
   return (
   <View
