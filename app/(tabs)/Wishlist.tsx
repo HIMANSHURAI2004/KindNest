@@ -37,7 +37,6 @@ import {
 } from "react-native-feather"
 import { getLocalStorage } from "@/service/Storage"
 import { set } from "firebase/database"
-import { set } from "firebase/database"
 
 const { width } = Dimensions.get("window")
 
@@ -182,7 +181,6 @@ const Wishlist = () => {
         return;
       }
 
-      const wishlistData = { name, category, description, requester, recipientId : userId, status : 'pending', timestamp : Timestamp.now() }
       const wishlistData = { name, category, description, requester, recipientId : userId, status : 'pending', timestamp : Timestamp.now() }
 
       if (editingId) {
@@ -468,7 +466,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: THEME.background,
     marginBottom: 85,
-    marginBottom: 85,
   },
   backgroundImage: {
     flex: 1,
@@ -641,7 +638,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 14,
-    marginBottom: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -710,14 +706,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    justifyContent: "space-between",
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.05)",
-  },
-  wishlistItemSubRequester: {
-    flexDirection: "row",
-    alignItems: "center",
   },
   wishlistItemSubRequester: {
     flexDirection: "row",
