@@ -31,8 +31,9 @@ import {
   ArrowLeft,
 } from "react-native-feather"
 import { database as db } from "@/config/FirebaseConfig"
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getCountFromServer, getDocs, Timestamp } from "firebase/firestore"
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getCountFromServer, getDocs, Timestamp, query, where } from "firebase/firestore"
 import { set } from "firebase/database"
+import { getLocalStorage } from "@/service/Storage"
 
 const { width } = Dimensions.get("window")
 
@@ -186,21 +187,24 @@ const getDonationColor = (type: string) => {
   }
 }
 
-const fetchDonationCount = async (collectionName: string) => {
+const fetchDonationCount = async (collectionName: string, donorId: string): Promise<number> => {
   try {
-    const collectionRef = collection(db, collectionName)
-    const snapshot = await getCountFromServer(collectionRef)
-    return snapshot.data().count
+    const collectionRef = collection(db, collectionName);
+    const q = query(collectionRef, where("donorId", "==", donorId)); // Filter by donorId
+    const snapshot = await getCountFromServer(q); // Get filtered count
+    console.log("Filtered Donation Count:", snapshot.data());
+    return snapshot.data().count;
   } catch (error) {
-    console.error("Error getting donation count:", error)
-    return 0
+    console.error("Error getting filtered donation count:", error);
+    return 0;
   }
-}
+};
 
-const fetchTotalMonetaryDonations = async (): Promise<number> => {
+const fetchTotalMonetaryDonations = async (donorId : string): Promise<number> => {
   try {
-    const monetaryCollection = collection(db, "Monetary Donations"); // Ensure the collection name matches exactly
-    const snapshot = await getDocs(monetaryCollection);
+    const monetaryCollection = collection(db, "Monetary Donations");
+    const q = query(monetaryCollection, where("donorId", "==", donorId)); // Filter by donorId
+    const snapshot = await getDocs(q);
     
     let totalAmount = 0;
 
@@ -233,12 +237,8 @@ const fetchDonationHistory = async (collectionName: string) => {
   }
 }
 
-// Utility function to shuffle an array
-const shuffleArray = (array: any[]) => {
-  return array.sort(() => Math.random() - 0.5);
-};
 
-const fetchAllDonations = async () => {
+const fetchAllDonations = async (donorId : string) => {
   try {
     const collections = ["Food Donations", "Clothing Donations", "Monetary Donations", "Other donations"];
     
@@ -247,7 +247,8 @@ const fetchAllDonations = async () => {
     // Fetch all donations from each collection
     for (const collectionName of collections) {
       const collectionRef = collection(db, collectionName);
-      const snapshot = await getDocs(collectionRef);
+      const q = query(collectionRef, where("donorId", "==", donorId));
+      const snapshot = await getDocs(q);
       
       const donations = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -258,8 +259,14 @@ const fetchAllDonations = async () => {
       allDonations = [...allDonations, ...donations];
     }
 
-    // Shuffle the donations
-    return shuffleArray(allDonations);
+     // Sort by timestamp (descending)
+     allDonations.sort((a, b) => {
+      const timeA = a.timestamp?.toMillis?.() || 0;
+      const timeB = b.timestamp?.toMillis?.() || 0;
+      return timeB - timeA;
+    });
+
+    return allDonations;
   } catch (error) {
     console.error("Error fetching donations:", error);
     return [];
@@ -335,33 +342,56 @@ const DonationHistory = () => {
   const [donationHistory, setDonationHistory] = useState<any[]>([])
   const [filteredDonations, setFilteredDonations] = useState(donationHistory)
 
+  const [userId, setUserId] = useState<string | null>(null);
+
   useEffect(() => {
-    const fetchCounts = async () => {
-      const foodCount = await fetchDonationCount("Food Donations");
-      const clothesCount = await fetchDonationCount("Clothing Donations");
-      const moneyCount = await fetchDonationCount("Monetary Donations");
-      const otherCount = await fetchDonationCount("Other donations");
-      const total = await fetchTotalMonetaryDonations()
-      setTotalAmount(total)
+    const fetchData = async () => {
+      const userInfo = await getLocalStorage("userDetail");
+      setUserId(userInfo?.uid || userInfo?.id || null);
+
+      const allDonations = await fetchAllDonations(userInfo?.uid || userInfo?.id || null);
+      setDonationHistory(allDonations);
+    };
+
+    fetchData();
+  }, [userId, selectedCategory, viewMode, selectedDonation, donationCounts, totalDonations, totalAmount]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      const userInfo = await getLocalStorage("userDetail");
+      const uid = userInfo?.uid || userInfo?.id || null;
+      setUserId(uid);
   
-      setDonationCounts({
-        Food: foodCount,
-        Clothes: clothesCount,
-        Money: moneyCount,
-        Other: otherCount,
-      });
-      setTotalDonations(foodCount + clothesCount + moneyCount + otherCount)
-  
-      // Fetch all donations and apply global filtering
-      const allDonations = await fetchAllDonations();
+      const allDonations = await fetchAllDonations(userInfo?.uid || userInfo?.id || null);
       setDonationHistory(allDonations);
   
-      console.log("Donation History:", allDonations);
-      
+      // Initial filter
+      if (selectedCategory) {
+        setFilteredDonations(allDonations.filter((donation) => (donation.category || donation.Category) === selectedCategory));
+      } else {
+        setFilteredDonations(allDonations);
+      }
+  
+      if (uid) {
+        const foodCount = await fetchDonationCount("Food Donations", uid);
+        const clothesCount = await fetchDonationCount("Clothing Donations", uid);
+        const moneyCount = await fetchDonationCount("Monetary Donations", uid);
+        const otherCount = await fetchDonationCount("Other donations", uid);
+        const total = await fetchTotalMonetaryDonations(uid);
+        setTotalAmount(total);
+        setDonationCounts({
+          Food: foodCount,
+          Clothes: clothesCount,
+          Money: moneyCount,
+          Other: otherCount,
+        });
+        setTotalDonations(foodCount + clothesCount + moneyCount + otherCount);
+      }
     };
   
-    fetchCounts();
-  }, []);
+    fetchInitialData();
+  }, [userId, selectedCategory, selectedDonation,totalDonations]);
+  
 
   const filterAnimation = new Animated.Value(0)
 
@@ -369,12 +399,19 @@ const DonationHistory = () => {
   // const stats = calculateStatistics(dummyDonations)
 
   useEffect(() => {
-    if (selectedCategory) {
-      setFilteredDonations(donationHistory.filter((donation) => (donation.category || donation.Category) === selectedCategory))
-    } else {
-      setFilteredDonations(donationHistory)
-    }
-  }, [selectedCategory])
+      const fetchAndFilterDonations = async () => {
+        const allDonations = await fetchAllDonations(userId || "");
+        setDonationHistory(allDonations);
+        
+        if (selectedCategory) {
+          setFilteredDonations(allDonations.filter((donation) => (donation.category || donation.Category) === selectedCategory));
+        } else {
+          setFilteredDonations(allDonations);
+        }
+      };
+  
+      fetchAndFilterDonations();
+    }, [selectedCategory, selectedDonation, totalDonations, totalAmount, userId]);
 
   // Fix the filter panel animation and toggle
   // Replace the toggleFilters function with this improved version:

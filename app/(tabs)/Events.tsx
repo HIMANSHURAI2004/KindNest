@@ -23,6 +23,7 @@ import AntDesign from "@expo/vector-icons/AntDesign"
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users, FileText, Heart } from "react-native-feather"
 import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
+import { getLocalStorage } from "@/service/Storage"
 
 const { width } = Dimensions.get("window")
 
