@@ -37,6 +37,7 @@ import {
 } from "react-native-feather"
 import { getLocalStorage } from "@/service/Storage"
 import { set } from "firebase/database"
+import { set } from "firebase/database"
 
 const { width } = Dimensions.get("window")
 
@@ -182,6 +183,7 @@ const Wishlist = () => {
       }
 
       const wishlistData = { name, category, description, requester, recipientId : userId, status : 'pending', timestamp : Timestamp.now() }
+      const wishlistData = { name, category, description, requester, recipientId : userId, status : 'pending', timestamp : Timestamp.now() }
 
       if (editingId) {
         const wishlistRef = doc(db, "wishlist", editingId)
@@ -275,6 +277,7 @@ const Wishlist = () => {
                 <AntDesign name="delete" size={16} color={THEME.error} />
               </TouchableOpacity>
               
+              
             </View>
           </View>
 
@@ -283,6 +286,13 @@ const Wishlist = () => {
             <Text style={styles.wishlistItemDescription}>{item.description}</Text>
             {/* <Text style={styles.wishlistItemRequesterText}>Status: {item.status}</Text> */}
             <View style={styles.wishlistItemRequester}>
+              <View style={styles.wishlistItemSubRequester}>
+                <User width={14} height={14} color={THEME.textMuted} />
+                <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
+              </View>
+              {item.status && <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
+                      <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status?.toUpperCase()}</Text>
+                    </View>}
               <View style={styles.wishlistItemSubRequester}>
                 <User width={14} height={14} color={THEME.textMuted} />
                 <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
@@ -409,21 +419,21 @@ const Wishlist = () => {
               </View>
             }
             ListEmptyComponent={
-              wishlist.length === 0 && (
+              wishlist.length === 0 ? (
                 <View style={styles.emptyStateContainer}>
                   <AlertTriangle width={50} height={50} color={THEME.textMuted} />
                   <Text style={styles.emptyStateText}>No wishlist requests yet</Text>
                   <Text style={styles.emptyStateSubtext}>Create a request to help those in need</Text>
                 </View>
-              )
+              ) : null
             }
             ListFooterComponent={
-              wishlist.length > 0 && (
+              wishlist.length > 0 ? (
                 <View style={styles.wishlistHeader}>
                   <Text style={styles.wishlistTitle}>Current Wishlist Requests</Text>
                   <View style={styles.wishlistDivider} />
                 </View>
-              )
+              ) : null
             }
             ListHeaderComponentStyle={styles.listHeaderStyle}
           />
@@ -457,6 +467,7 @@ const styles = StyleSheet.create({
   backgroundContainer: {
     marginTop: 20,
     backgroundColor: THEME.background,
+    marginBottom: 85,
     marginBottom: 85,
   },
   backgroundImage: {
@@ -630,6 +641,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 14,
+    marginBottom: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -698,9 +710,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    justifyContent: "space-between",
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.05)",
+  },
+  wishlistItemSubRequester: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   wishlistItemSubRequester: {
     flexDirection: "row",

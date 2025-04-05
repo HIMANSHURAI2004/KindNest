@@ -70,11 +70,11 @@ const HomeScreen = () => {
         </View>
       </View> */}
 
-      {/* <View className="items-center mb-6">
-        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.replace('../donor/donationHistory')}>
-          <Text className="text-white text-center text-lg font-semibold">Donation History</Text>
+      <View className="items-center mb-6">
+        <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.replace('../donor/requestedDonations')}>
+          <Text className="text-white text-center text-lg font-semibold">Requested</Text>
         </TouchableOpacity>
-      </View> */}
+      </View>
 
       <View className="items-center mb-6">
         <TouchableOpacity className="bg-teal-700 p-4 w-48 rounded-full shadow-lg" onPress={() => router.push('../donor')}>

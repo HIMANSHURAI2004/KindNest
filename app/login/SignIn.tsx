@@ -39,7 +39,7 @@ const SignIn = () => {
             
             if (userData.category) {
               await setLocalStorage("category",userData.category);
-              router.replace(userData.category === "donor" ? "/donor" : "/");
+              router.replace("/");
             }
             if(userData.category === 'recipient')
             {
