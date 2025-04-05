@@ -11,19 +11,20 @@ import {
   StatusBar,
   Platform,
   Alert,
+  Modal,
+  ActivityIndicator,
 } from "react-native"
 import { Image } from "expo-image"
 import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
-import { ArrowLeft, Minus, Plus } from "react-native-feather"
+import { ArrowLeft, Minus, Plus, ChevronDown, MapPin, Phone, Home } from "react-native-feather"
 import { useRouter } from "expo-router"
-import { collection, addDoc, Timestamp} from "firebase/firestore";
+import { collection, addDoc,getDocs, query, where, Timestamp } from "firebase/firestore";
 import { database } from "../../../config/FirebaseConfig";
 import { getLocalStorage } from "@/service/Storage"
 
 // Theme colors
 const THEME = {
-  
   primary: "#1f6969",
   primaryLight: "#2a8a8a",
   primaryDark: "#184f4f",
@@ -84,11 +85,11 @@ const foodItems = [
 
 // Payment methods
 const paymentMethods = [
-    {
-      id: "wallet",
-      name: "Digital Wallet",
-      icon: "https://cdn-icons-png.flaticon.com/128/584/584026.png",
-    },
+  {
+    id: "wallet",
+    name: "Digital Wallet",
+    icon: "https://cdn-icons-png.flaticon.com/128/584/584026.png",
+  },
   {
     id: "credit",
     name: "Credit Card",
@@ -102,21 +103,32 @@ const paymentMethods = [
 ]
 
 interface FoodItem {
-    id: string;
-    name: string;
-    price: number;
-    image: string;
-    unit: string;
+  id: string
+  name: string
+  price: number
+  image: string
+  unit: string
 }
 
 interface PaymentMethod {
-    id: string;
-    name: string;
-    icon: string;
+  id: string
+  name: string
+  icon: string
 }
 
 interface SelectedItems {
-    [key: string]: number;
+  [key: string]: number
+}
+
+interface Recipient {
+  uid: string
+  displayName: string
+  organizationDetails: {
+    type: string
+    name: string
+    address: string
+    contact: string
+  }
 }
 
 export default function Food() {
@@ -124,6 +136,10 @@ export default function Food() {
   const [selectedItems, setSelectedItems] = useState<{ [key: string]: number }>({})
   const [totalAmount, setTotalAmount] = useState(0)
   const [selectedPayment, setSelectedPayment] = useState("credit")
+  const [recipients, setRecipients] = useState<Recipient[]>([])
+  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null)
+  const [showRecipientDropdown, setShowRecipientDropdown] = useState(false)
+  const [loadingRecipients, setLoadingRecipients] = useState(true)
 
   useEffect(() => {
     // Initialize selected items with 0 quantity
@@ -132,6 +148,9 @@ export default function Food() {
       initialItems[item.id] = 0
     })
     setSelectedItems(initialItems)
+
+    // Fetch recipients from Firebase
+    fetchRecipients()
   }, [])
 
   useEffect(() => {
@@ -146,38 +165,76 @@ export default function Food() {
     setTotalAmount(total)
   }, [selectedItems])
 
+  const fetchRecipients = async () => {
+    try {
+      setLoadingRecipients(true)
+      const recipientsQuery = query(collection(database, "users"), where("category", "==", "recipient"))
 
-const handleQuantityChange = (itemId: string, change: number) => {
-    setSelectedItems((prev: SelectedItems) => {
-        const newQuantity = Math.max(0, (prev[itemId] || 0) + change);
-        return {
-            ...prev,
-            [itemId]: newQuantity,
-        };
-    });
-};
+      const querySnapshot = await getDocs(recipientsQuery)
+      const recipientsList: Recipient[] = []
 
-const handleCheckout = async () => {
-  // Check if any items are selected
-  const hasItems = Object.values(selectedItems).some((quantity) => quantity > 0);
+      querySnapshot.forEach((doc) => {
+        const data = doc.data()
+        if (data.organizationDetails) {
+          recipientsList.push({
+            uid: doc.id,
+            displayName: data.displayName || "",
+            organizationDetails: {
+              type: data.organizationDetails.type || "",
+              name: data.organizationDetails.name || "",
+              address: data.organizationDetails.address || "",
+              contact: data.organizationDetails.contact || "",
+            },
+          })
+        }
+      })
 
-  if (!hasItems) {
-    Alert.alert("No items selected", "Please select at least one food item to donate.");
-    return;
+      setRecipients(recipientsList)
+    } catch (error) {
+      console.error("Error fetching recipients:", error)
+      Alert.alert("Error", "Failed to load recipient organizations")
+    } finally {
+      setLoadingRecipients(false)
+    }
   }
 
-  Alert.alert(
-    "Confirm Donation",
-    `You're about to donate food worth ₹${totalAmount.toFixed(2)}. Proceed?`,
-    [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Confirm",
-        onPress: async () => {
-          try {
-            // Prepare order data
-            const userInfo = await getLocalStorage("userDetail");
-            const userId = userInfo?.uid || userInfo?.id;
+  const handleQuantityChange = (itemId: string, change: number) => {
+    setSelectedItems((prev: SelectedItems) => {
+      const newQuantity = Math.max(0, (prev[itemId] || 0) + change)
+      return {
+        ...prev,
+        [itemId]: newQuantity,
+      }
+    })
+  }
+
+  const handleCheckout = async () => {
+    // Check if any items are selected
+    const hasItems = Object.values(selectedItems).some((quantity) => quantity > 0)
+
+    if (!hasItems) {
+      Alert.alert("No items selected", "Please select at least one food item to donate.")
+      return
+    }
+
+    // Check if recipient is selected
+    if (!selectedRecipient) {
+      Alert.alert("No recipient selected", "Please select an organization to donate to.")
+      return
+    }
+
+    Alert.alert(
+      "Confirm Donation",
+      `You're about to donate food worth ₹${totalAmount.toFixed(2)} to ${selectedRecipient.organizationDetails.name}. Proceed?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Confirm",
+          onPress: async () => {
+            try {
+              // Prepare order data
+              const userInfo = await getLocalStorage("userDetail")
+              const userId = userInfo?.uid || userInfo?.id
 
             if (!userId) {
               Alert.alert("Error", "User ID not found. Please log in again.");
@@ -199,32 +256,44 @@ const handleCheckout = async () => {
 
             };
 
-            // Store in Firebase Firestore
-            await addDoc(collection(database, "Food Donations"), orderData);
+              // Store in Firebase Firestore
+              await addDoc(collection(database, "Food Donations"), orderData)
 
-            Alert.alert("Thank you!", "Your donation has been recorded successfully.");
-          } catch (error) {
-            console.error("Error storing order:", error);
-            Alert.alert("Error", "Something went wrong. Please try again.");
-          }
+              Alert.alert("Thank you!", "Your donation has been recorded successfully.", [
+                {
+                  text: "OK",
+                  onPress: () => router.replace("/donor"),
+                },
+              ])
+            } catch (error) {
+              console.error("Error storing order:", error)
+              Alert.alert("Error", "Something went wrong. Please try again.")
+            }
+          },
         },
-      },
-    ]
-  );
-};
+      ],
+    )
+  }
 
+  const getOrganizationTypeIcon = (type: string) => {
+    switch (type) {
+      case "Old Age Home":
+        return <Home width={16} height={16} color={THEME.textMuted} />
+      case "Orphanage":
+        return <Home width={16} height={16} color={THEME.textMuted} />
+      case "NGO":
+        return <Home width={16} height={16} color={THEME.textMuted} />
+      default:
+        return <Home width={16} height={16} color={THEME.textMuted} />
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={THEME.primary} />
 
       {/* Header */}
-      <LinearGradient
-        colors={["#0B5351", "#092327"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.header}
-      >
+      <LinearGradient colors={["#0B5351", "#092327"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.replace("/donor")}>
           <ArrowLeft width={24} height={24} color={THEME.textLight} />
         </TouchableOpacity>
@@ -252,7 +321,7 @@ const handleCheckout = async () => {
                 <View style={styles.foodItemDetails}>
                   <Text style={styles.foodItemName}>{item.name}</Text>
                   <Text style={styles.foodItemPrice}>
-                  ₹{item.price.toFixed(2)} per {item.unit}
+                    ₹{item.price.toFixed(2)} per {item.unit}
                   </Text>
                 </View>
                 <View style={styles.quantityControl}>
@@ -275,6 +344,54 @@ const handleCheckout = async () => {
               </View>
             ))}
           </View>
+        </View>
+
+        {/* Select Organization Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Select Organization</Text>
+
+          {loadingRecipients ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={THEME.primary} />
+              <Text style={styles.loadingText}>Loading organizations...</Text>
+            </View>
+          ) : recipients.length === 0 ? (
+            <View style={styles.noRecipientsContainer}>
+              <Text style={styles.noRecipientsText}>No recipient organizations found</Text>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.recipientSelector} onPress={() => setShowRecipientDropdown(true)}>
+              {selectedRecipient ? (
+                <View style={styles.selectedRecipientContainer}>
+                  <View style={styles.selectedRecipientHeader}>
+                    <View style={styles.selectedRecipientNameContainer}>
+                      <Text style={styles.selectedRecipientName}>{selectedRecipient.organizationDetails.name}</Text>
+                      <View style={styles.recipientTypeBadge}>
+                        <Text style={styles.recipientTypeBadgeText}>{selectedRecipient.organizationDetails.type}</Text>
+                      </View>
+                    </View>
+                    <ChevronDown width={20} height={20} color={THEME.textMuted} />
+                  </View>
+
+                  <View style={styles.recipientDetailsContainer}>
+                    <View style={styles.recipientDetailRow}>
+                      <MapPin width={14} height={14} color={THEME.textMuted} />
+                      <Text style={styles.recipientDetailText}>{selectedRecipient.organizationDetails.address}</Text>
+                    </View>
+                    <View style={styles.recipientDetailRow}>
+                      <Phone width={14} height={14} color={THEME.textMuted} />
+                      <Text style={styles.recipientDetailText}>{selectedRecipient.organizationDetails.contact}</Text>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.selectRecipientPlaceholder}>
+                  <Text style={styles.selectRecipientPlaceholderText}>Select an organization to donate to</Text>
+                  <ChevronDown width={20} height={20} color={THEME.textMuted} />
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Payment Section */}
@@ -329,9 +446,13 @@ const handleCheckout = async () => {
 
       {/* Checkout Button */}
       <BlurView intensity={80} tint="light" style={styles.checkoutContainer}>
-        <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+        <TouchableOpacity
+          style={[styles.checkoutButton, (!selectedRecipient || totalAmount === 0) && styles.checkoutButtonDisabled]}
+          onPress={handleCheckout}
+          disabled={!selectedRecipient || totalAmount === 0}
+        >
           <LinearGradient
-            colors={["#0B5351", "#092327"]}
+            colors={!selectedRecipient || totalAmount === 0 ? ["#ccc", "#999"] : ["#0B5351", "#092327"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.checkoutButtonGradient}
@@ -340,6 +461,56 @@ const handleCheckout = async () => {
           </LinearGradient>
         </TouchableOpacity>
       </BlurView>
+
+      {/* Recipients Selection Modal */}
+      <Modal
+        visible={showRecipientDropdown}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowRecipientDropdown(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Organization</Text>
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowRecipientDropdown(false)}>
+                <Text style={styles.modalCloseButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.recipientsList}>
+              {recipients.map((recipient) => (
+                <TouchableOpacity
+                  key={recipient.uid}
+                  style={styles.recipientCard}
+                  onPress={() => {
+                    setSelectedRecipient(recipient)
+                    setShowRecipientDropdown(false)
+                  }}
+                >
+                  <View style={styles.recipientCardHeader}>
+                    <Text style={styles.recipientCardName}>{recipient.organizationDetails.name}</Text>
+                    <View style={styles.recipientCardTypeBadge}>
+                      <Text style={styles.recipientCardTypeBadgeText}>{recipient.organizationDetails.type}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.recipientCardDetails}>
+                    <View style={styles.recipientCardDetailRow}>
+                      <MapPin width={14} height={14} color={THEME.textMuted} />
+                      <Text style={styles.recipientCardDetailText}>{recipient.organizationDetails.address}</Text>
+                    </View>
+                    <View style={styles.recipientCardDetailRow}>
+                      <Phone width={14} height={14} color={THEME.textMuted} />
+                      <Text style={styles.recipientCardDetailText}>{recipient.organizationDetails.contact}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -421,7 +592,6 @@ const styles = StyleSheet.create({
   foodItemImage: {
     width: 30,
     height: 30,
-    // tintColor: THEME.primary,
   },
   foodItemDetails: {
     flex: 1,
@@ -467,6 +637,198 @@ const styles = StyleSheet.create({
     width: 30,
     textAlign: "center",
   },
+  // Recipient selector styles
+  loadingContainer: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    flexDirection: "row",
+  },
+  loadingText: {
+    marginLeft: 10,
+    fontSize: 14,
+    fontFamily: "poppins-medium",
+    color: THEME.textMuted,
+  },
+  noRecipientsContainer: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  noRecipientsText: {
+    fontSize: 14,
+    fontFamily: "poppins-medium",
+    color: THEME.textMuted,
+  },
+  recipientSelector: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  selectRecipientPlaceholder: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  selectRecipientPlaceholderText: {
+    fontSize: 14,
+    fontFamily: "poppins-medium",
+    color: THEME.textMuted,
+  },
+  selectedRecipientContainer: {
+    width: "100%",
+  },
+  selectedRecipientHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
+  selectedRecipientNameContainer: {
+    flex: 1,
+  },
+  selectedRecipientName: {
+    fontSize: 16,
+    fontFamily: "poppins-bold",
+    color: THEME.text,
+    marginBottom: 4,
+  },
+  recipientTypeBadge: {
+    backgroundColor: "rgba(31, 105, 105, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginBottom: 8,
+  },
+  recipientTypeBadgeText: {
+    fontSize: 12,
+    fontFamily: "poppins-medium",
+    color: THEME.primary,
+  },
+  recipientDetailsContainer: {
+    marginTop: 4,
+  },
+  recipientDetailRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 6,
+  },
+  recipientDetailText: {
+    fontSize: 13,
+    fontFamily: "poppins-medium",
+    color: THEME.textMuted,
+    marginLeft: 8,
+    flex: 1,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: THEME.background,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === "ios" ? 40 : 24,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.05)",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: "poppins-bold",
+    color: THEME.text,
+  },
+  modalCloseButton: {
+    padding: 8,
+  },
+  modalCloseButtonText: {
+    fontSize: 14,
+    fontFamily: "poppins-medium",
+    color: THEME.primary,
+  },
+  recipientsList: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    maxHeight: "70%",
+  },
+  recipientCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  recipientCardHeader: {
+    marginBottom: 10,
+  },
+  recipientCardName: {
+    fontSize: 16,
+    fontFamily: "poppins-bold",
+    color: THEME.text,
+    marginBottom: 4,
+  },
+  recipientCardTypeBadge: {
+    backgroundColor: "rgba(31, 105, 105, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+  recipientCardTypeBadgeText: {
+    fontSize: 12,
+    fontFamily: "poppins-medium",
+    color: THEME.primary,
+  },
+  recipientCardDetails: {
+    marginTop: 4,
+  },
+  recipientCardDetailRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 6,
+  },
+  recipientCardDetailText: {
+    fontSize: 13,
+    fontFamily: "poppins-medium",
+    color: THEME.text,
+    marginLeft: 8,
+    flex: 1,
+  },
+  // Payment method styles
   paymentMethodsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -558,6 +920,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
+  },
+  checkoutButtonDisabled: {
+    opacity: 0.8,
   },
   checkoutButtonGradient: {
     paddingVertical: 16,
