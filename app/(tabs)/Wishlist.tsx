@@ -14,10 +14,10 @@ import {
   Dimensions,
   Platform,
   Keyboard,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from "react-native"
 import { Picker } from "@react-native-picker/picker"
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore"
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, Timestamp } from "firebase/firestore"
 import { database as db } from "../../config/FirebaseConfig"
 import AntDesign from "@expo/vector-icons/AntDesign"
 import { LinearGradient } from "expo-linear-gradient"
@@ -36,6 +36,7 @@ import {
   Activity,
 } from "react-native-feather"
 import { getLocalStorage } from "@/service/Storage"
+import { set } from "firebase/database"
 
 const { width } = Dimensions.get("window")
 
@@ -127,16 +128,38 @@ const Wishlist = () => {
   const [successMessage, setSuccessMessage] = useState("")
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "wishlist"), (snapshot) => {
-      const wishlistData: WishlistItem[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<WishlistItem, "id">),
-      }))
-      setWishlist(wishlistData)
-    })
+    let unsubscribe: (() => void) | undefined;
+  
+    const fetchWishlist = async () => {
+      const userInfo = await getLocalStorage("userDetail");
 
-    return () => unsubscribe()
-  }, [])
+      console.log("User Info:", userInfo); // Debugging line
+  
+      if (!userInfo?.uid) return;
+  
+      const wishlistRef = collection(db, "wishlist");
+      console.log("Wishlist Ref:", wishlistRef); // Debugging line
+      const q = query(wishlistRef, where("recipientId", "==", userInfo.uid));
+  
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const wishlistData: WishlistItem[] = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<WishlistItem, "id">),
+        }));
+        setWishlist(wishlistData);
+      });
+    };
+  
+    fetchWishlist();
+  
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, []); // ✅ no extra dependencies here
+  
+  
 
   const handleSubmit = async () => {
     if (!name || !description || !requester) {
@@ -158,7 +181,7 @@ const Wishlist = () => {
         return;
       }
 
-      const wishlistData = { name, category, description, requester, recipientId : userId, status : 'pending' }
+      const wishlistData = { name, category, description, requester, recipientId : userId, status : 'pending', timestamp : Timestamp.now() }
 
       if (editingId) {
         const wishlistRef = doc(db, "wishlist", editingId)
@@ -251,9 +274,7 @@ const Wishlist = () => {
               >
                 <AntDesign name="delete" size={16} color={THEME.error} />
               </TouchableOpacity>
-              {item.status && <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
-                      <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status}</Text>
-                    </View>}
+              
             </View>
           </View>
 
@@ -262,8 +283,13 @@ const Wishlist = () => {
             <Text style={styles.wishlistItemDescription}>{item.description}</Text>
             {/* <Text style={styles.wishlistItemRequesterText}>Status: {item.status}</Text> */}
             <View style={styles.wishlistItemRequester}>
-              <User width={14} height={14} color={THEME.textMuted} />
-              <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
+              <View style={styles.wishlistItemSubRequester}>
+                <User width={14} height={14} color={THEME.textMuted} />
+                <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
+              </View>
+              {item.status && <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
+                      <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status?.toUpperCase()}</Text>
+                    </View>}
             </View>
           </View>
         </View>
@@ -272,7 +298,6 @@ const Wishlist = () => {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
         <LinearGradient colors={["#0B5351", "#092327"]} start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }} style={styles.headerGradient}>
@@ -421,7 +446,6 @@ const Wishlist = () => {
       </LinearGradient>
 
     </View>
-    </TouchableWithoutFeedback>
   )
 }
 
@@ -433,6 +457,7 @@ const styles = StyleSheet.create({
   backgroundContainer: {
     marginTop: 20,
     backgroundColor: THEME.background,
+    marginBottom: 85,
   },
   backgroundImage: {
     flex: 1,
@@ -604,7 +629,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.card,
     borderRadius: 16,
     marginHorizontal: 16,
-    marginBottom: 106,
+    marginBottom: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -672,9 +697,14 @@ const styles = StyleSheet.create({
   wishlistItemRequester: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.05)",
+  },
+  wishlistItemSubRequester: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   wishlistItemRequesterText: {
     fontSize: 13,

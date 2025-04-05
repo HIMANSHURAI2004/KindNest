@@ -11,7 +11,8 @@ import {
   Alert,
   TextInput,
   Modal,
-  ActivityIndicator
+  ActivityIndicator,
+  FlatList
 } from 'react-native';
 import {Phone, Home } from "react-native-feather"
 import { Image } from 'expo-image';
@@ -35,6 +36,7 @@ import { useRouter } from 'expo-router';
 import { collection, addDoc, Timestamp, getDocs, query, where } from "firebase/firestore"
 import { database } from "../../../config/FirebaseConfig";
 import { getLocalStorage } from "@/service/Storage";
+import axios from "axios";
 
 // Theme colors
 const THEME = {
@@ -48,6 +50,7 @@ const THEME = {
   text: '#333333',
   textLight: '#ffffff',
   textMuted: '#7c8a97',
+  inputBorder: "#e0e0e0",
 };
 
 interface Recipient {
@@ -270,8 +273,45 @@ export default function Other() {
   const [calendarDays, setCalendarDays] = useState(generateCalendarDays(selectedDate));
   const [currentMonth, setCurrentMonth] = useState(selectedDate.getMonth());
   const [currentYear, setCurrentYear] = useState(selectedDate.getFullYear());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
+  const fetchLocations = async (text: string) => {
+    setSearchQuery(text);
+    if (text.length < 3) {
+      setSuggestions([]);
+      return;
+    }
   
+    try {
+      const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
+        params: {
+          q: text,
+          format: "json",
+          addressdetails: 1,
+          limit: 5,
+          countrycodes: "IN", 
+        },
+        headers: {
+          // Required headers for Nominatim usage policy
+          "User-Agent": "Your-App-Name/1.0 (your@email.com)",
+          "Referer": "https://yourdomain.com",
+          "Accept-Language": "en-US,en;q=0.9",
+        }
+      });
+      
+      setSuggestions(response.data);
+    } catch (error) {
+      console.error("Error fetching locations: ", error);
+      Alert.alert("Error", "Could not fetch locations. Please try again later.");
+    }
+  };
+
+  const handleSelectLocation = (location: any) => {
+    setSearchQuery(location.display_name);
+    setPickupAddress(location.display_name);
+    setSuggestions([]);
+  };
 
   useEffect(() => {
     // Initialize selected items with 0 quantity
@@ -648,11 +688,26 @@ export default function Other() {
               <TextInput
                 style={styles.locationInput}
                 placeholder="Enter pickup address"
-                value={pickupAddress}
-                onChangeText={setPickupAddress}
+                value={searchQuery}
+                onChangeText={fetchLocations}
                 placeholderTextColor={THEME.textMuted}
               />
             </View>
+            {suggestions.length > 0 && (
+              <FlatList
+                data={suggestions}
+                keyExtractor={(item :any) => item.place_id}
+                renderItem={({ item }: { item: any }) => (
+                  <TouchableOpacity 
+                    style={styles.suggestion} 
+                    onPress={() => handleSelectLocation(item)}
+                  >
+                    <Text style={styles.suggestionText}>{item.display_name}</Text>
+                  </TouchableOpacity>
+                )}
+                style={styles.suggestionsList}
+              />
+            )}
             
             {/* Drop Address (Optional) */}
             <View style={styles.locationInputContainer}>
@@ -1563,5 +1618,20 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: THEME.textLight,
         fontFamily: "poppins-medium",
+      },
+      suggestionsList: {
+        maxHeight: 150,
+        backgroundColor: THEME.background,
+        borderRadius: 8,
+        marginTop: 4,
+      },
+      suggestion: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: THEME.inputBorder,
+      },
+      suggestionText: {
+        color: THEME.text,
+        fontSize: 14,
       },
 });
