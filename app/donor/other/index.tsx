@@ -10,8 +10,10 @@ import {
   Platform,
   Alert,
   TextInput,
-  Modal
+  Modal,
+  ActivityIndicator
 } from 'react-native';
+import {Phone, Home } from "react-native-feather"
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -30,7 +32,7 @@ import {
   ChevronUp,
 } from 'react-native-feather';
 import { useRouter } from 'expo-router';
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, Timestamp, getDocs, query, where } from "firebase/firestore"
 import { database } from "../../../config/FirebaseConfig";
 import { getLocalStorage } from "@/service/Storage";
 
@@ -47,6 +49,17 @@ const THEME = {
   textLight: '#ffffff',
   textMuted: '#7c8a97',
 };
+
+interface Recipient {
+  uid: string
+  displayName: string
+  organizationDetails: {
+    type: string
+    name: string
+    address: string
+    contact: string
+  }
+}
 
 // Donation categories and items
 const donationCategories = [
@@ -137,6 +150,12 @@ export default function Other() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+
+  const [recipients, setRecipients] = useState<Recipient[]>([])
+  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null)
+  const [showRecipientDropdown, setShowRecipientDropdown] = useState(false)
+  const [loadingRecipients, setLoadingRecipients] = useState(true)
 
   // Helper functions for date handling
   const isToday = (date: Date): boolean => {
@@ -270,8 +289,43 @@ export default function Other() {
       initialExpandedState[category.id] = false;
     });
     setExpandedCategories(initialExpandedState);
+
+    // Fetch recipients from Firebase
+    fetchRecipients()
   }, []);
 
+  const fetchRecipients = async () => {
+        try {
+          setLoadingRecipients(true)
+          const recipientsQuery = query(collection(database, "users"), where("category", "==", "recipient"))
+    
+          const querySnapshot = await getDocs(recipientsQuery)
+          const recipientsList: Recipient[] = []
+    
+          querySnapshot.forEach((doc) => {
+            const data = doc.data()
+            if (data.organizationDetails) {
+              recipientsList.push({
+                uid: doc.id,
+                displayName: data.displayName || "",
+                organizationDetails: {
+                  type: data.organizationDetails.type || "",
+                  name: data.organizationDetails.name || "",
+                  address: data.organizationDetails.address || "",
+                  contact: data.organizationDetails.contact || "",
+                },
+              })
+            }
+          })
+    
+          setRecipients(recipientsList)
+        } catch (error) {
+          console.error("Error fetching recipients:", error)
+          Alert.alert("Error", "Failed to load recipient organizations")
+        } finally {
+          setLoadingRecipients(false)
+        }
+      }
   useEffect(() => {
     // Calculate total items whenever selected items change
     let total = 0;
@@ -337,6 +391,11 @@ export default function Other() {
       return false;
     }
     
+    // Check if recipient is selected
+    if (!selectedRecipient) {
+      Alert.alert("No recipient selected", "Please select an organization to donate to.")
+      return false
+    }
     return true;
   };
   
@@ -370,12 +429,20 @@ export default function Other() {
                 selectedTimeSlot,
                 timestamp: Timestamp.now(),
                 donorId : userId,
+                recipientId: selectedRecipient?.uid || "",
+                recipientName: selectedRecipient?.organizationDetails?.name || "",
+                recipientType: selectedRecipient?.organizationDetails?.type || "",
               }
   
               // Store donation in Firestore
               await addDoc(collection(database, "Other donations"), donationData)
   
-              Alert.alert("Thank you!", "Your donation has been scheduled successfully.")
+              Alert.alert("Thank you!", "Your donation has been scheduled successfully.", [
+                {
+                  text: "OK",
+                  onPress: () => router.replace("/donor"),
+                },
+              ])
             } catch (error) {
               console.error("Error scheduling donation:", error)
               Alert.alert("Error", "Something went wrong. Please try again.")
@@ -386,6 +453,18 @@ export default function Other() {
     )
   }
   
+  const getOrganizationTypeIcon = (type: string) => {
+        switch (type) {
+          case "Old Age Home":
+            return <Home width={16} height={16} color={THEME.textMuted} />
+          case "Orphanage":
+            return <Home width={16} height={16} color={THEME.textMuted} />
+          case "NGO":
+            return <Home width={16} height={16} color={THEME.textMuted} />
+          default:
+            return <Home width={16} height={16} color={THEME.textMuted} />
+        }
+      }
 
   // Get count of items selected in a category
   interface CategoryItem {
@@ -508,6 +587,54 @@ export default function Other() {
           </View>
         </View>
         
+        {/* Select Organization Section */}
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Select Organization</Text>
+        
+                  {loadingRecipients ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" color={THEME.primary} />
+                      <Text style={styles.loadingText}>Loading organizations...</Text>
+                    </View>
+                  ) : recipients.length === 0 ? (
+                    <View style={styles.noRecipientsContainer}>
+                      <Text style={styles.noRecipientsText}>No recipient organizations found</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity style={styles.recipientSelector} onPress={() => setShowRecipientDropdown(true)}>
+                      {selectedRecipient ? (
+                        <View style={styles.selectedRecipientContainer}>
+                          <View style={styles.selectedRecipientHeader}>
+                            <View style={styles.selectedRecipientNameContainer}>
+                              <Text style={styles.selectedRecipientName}>{selectedRecipient.organizationDetails.name}</Text>
+                              <View style={styles.recipientTypeBadge}>
+                                <Text style={styles.recipientTypeBadgeText}>{selectedRecipient.organizationDetails.type}</Text>
+                              </View>
+                            </View>
+                            <ChevronDown width={20} height={20} color={THEME.textMuted} />
+                          </View>
+        
+                          <View style={styles.recipientDetailsContainer}>
+                            <View style={styles.recipientDetailRow}>
+                              <MapPin width={14} height={14} color={THEME.textMuted} />
+                              <Text style={styles.recipientDetailText}>{selectedRecipient.organizationDetails.address}</Text>
+                            </View>
+                            <View style={styles.recipientDetailRow}>
+                              <Phone width={14} height={14} color={THEME.textMuted} />
+                              <Text style={styles.recipientDetailText}>{selectedRecipient.organizationDetails.contact}</Text>
+                            </View>
+                          </View>
+                        </View>
+                      ) : (
+                        <View style={styles.selectRecipientPlaceholder}>
+                          <Text style={styles.selectRecipientPlaceholderText}>Select an organization to donate to</Text>
+                          <ChevronDown width={20} height={20} color={THEME.textMuted} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </View>
+
         {/* Location Section */}
         <View style={[styles.sectionContainer, { marginTop: 30 }]}>
           <Text style={styles.sectionTitle}>Pickup & Drop Locations</Text>
@@ -696,11 +823,12 @@ export default function Other() {
       {/* Schedule Button */}
       <BlurView intensity={80} tint="light" style={styles.scheduleButtonContainer}>
         <TouchableOpacity
-          style={styles.scheduleButton}
+          style={[styles.checkoutButton, (!selectedRecipient || totalItems === 0) && styles.checkoutButtonDisabled]}
           onPress={handleScheduleDonation}
+          disabled={!selectedRecipient || totalItems === 0}
         >
           <LinearGradient
-            colors={["#0B5351", "#092327"]}
+            colors={!selectedRecipient || totalItems === 0 ? ["#ccc", "#999"] : ["#0B5351", "#092327"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.scheduleButtonGradient}
@@ -709,6 +837,56 @@ export default function Other() {
           </LinearGradient>
         </TouchableOpacity>
       </BlurView>
+
+      {/* Recipients Selection Modal */}
+                  <Modal
+                    visible={showRecipientDropdown}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setShowRecipientDropdown(false)}
+                  >
+                    <View style={styles.modalContainer}>
+                      <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                          <Text style={styles.modalTitle}>Select Organization</Text>
+                          <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowRecipientDropdown(false)}>
+                            <Text style={styles.modalCloseButtonText}>Close</Text>
+                          </TouchableOpacity>
+                        </View>
+            
+                        <ScrollView style={styles.recipientsList}>
+                          {recipients.map((recipient) => (
+                            <TouchableOpacity
+                              key={recipient.uid}
+                              style={styles.recipientCard}
+                              onPress={() => {
+                                setSelectedRecipient(recipient)
+                                setShowRecipientDropdown(false)
+                              }}
+                            >
+                              <View style={styles.recipientCardHeader}>
+                                <Text style={styles.recipientCardName}>{recipient.organizationDetails.name}</Text>
+                                <View style={styles.recipientCardTypeBadge}>
+                                  <Text style={styles.recipientCardTypeBadgeText}>{recipient.organizationDetails.type}</Text>
+                                </View>
+                              </View>
+            
+                              <View style={styles.recipientCardDetails}>
+                                <View style={styles.recipientCardDetailRow}>
+                                  <MapPin width={14} height={14} color={THEME.textMuted} />
+                                  <Text style={styles.recipientCardDetailText}>{recipient.organizationDetails.address}</Text>
+                                </View>
+                                <View style={styles.recipientCardDetailRow}>
+                                  <Phone width={14} height={14} color={THEME.textMuted} />
+                                  <Text style={styles.recipientCardDetailText}>{recipient.organizationDetails.contact}</Text>
+                                </View>
+                              </View>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    </View>
+                  </Modal>
     </SafeAreaView>
   );
 }
@@ -990,34 +1168,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  summaryContainer: {
-    marginHorizontal: 20,
-    backgroundColor: THEME.card,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  summaryLabel: {
-    fontSize: 15,
-    color: THEME.textMuted,
-    fontFamily: 'poppins',
-    
-  },
-  summaryValue: {
-    fontSize: 15,
-    color: THEME.text,
-    fontFamily: 'poppins-medium',
-  },
   scheduleButtonContainer: {
     position: 'absolute',
     bottom: 0,
@@ -1161,4 +1311,257 @@ const styles = StyleSheet.create({
     color: THEME.textLight,
     fontFamily: 'poppins-medium',
   },
+  // Recipient selector styles
+      loadingContainer: {
+        backgroundColor: THEME.card,
+        borderRadius: 16,
+        padding: 20,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+        flexDirection: "row",
+      },
+      loadingText: {
+        marginLeft: 10,
+        fontSize: 14,
+        fontFamily: "poppins-medium",
+        color: THEME.textMuted,
+      },
+      noRecipientsContainer: {
+        backgroundColor: THEME.card,
+        borderRadius: 16,
+        padding: 20,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+      },
+      noRecipientsText: {
+        fontSize: 14,
+        fontFamily: "poppins-medium",
+        color: THEME.textMuted,
+      },
+      recipientSelector: {
+        backgroundColor: THEME.card,
+        borderRadius: 16,
+        padding: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+      },
+      selectRecipientPlaceholder: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+      },
+      selectRecipientPlaceholderText: {
+        fontSize: 14,
+        fontFamily: "poppins-medium",
+        color: THEME.textMuted,
+      },
+      selectedRecipientContainer: {
+        width: "100%",
+      },
+      selectedRecipientHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: 10,
+      },
+      selectedRecipientNameContainer: {
+        flex: 1,
+      },
+      selectedRecipientName: {
+        fontSize: 16,
+        fontFamily: "poppins-bold",
+        color: THEME.text,
+        marginBottom: 4,
+      },
+      recipientTypeBadge: {
+        backgroundColor: "rgba(31, 105, 105, 0.1)",
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 12,
+        alignSelf: "flex-start",
+        marginBottom: 8,
+      },
+      recipientTypeBadgeText: {
+        fontSize: 12,
+        fontFamily: "poppins-medium",
+        color: THEME.primary,
+      },
+      recipientDetailsContainer: {
+        marginTop: 4,
+      },
+      recipientDetailRow: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        marginBottom: 6,
+      },
+      recipientDetailText: {
+        fontSize: 13,
+        fontFamily: "poppins-medium",
+        color: THEME.textMuted,
+        marginLeft: 8,
+        flex: 1,
+      },
+      // Modal styles
+      modalContainer: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "flex-end",
+      },
+      modalContent: {
+        backgroundColor: THEME.background,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingTop: 16,
+        paddingBottom: Platform.OS === "ios" ? 40 : 24,
+        maxHeight: "80%",
+      },
+      modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(0, 0, 0, 0.05)",
+      },
+      modalTitle: {
+        fontSize: 18,
+        fontFamily: "poppins-bold",
+        color: THEME.text,
+      },
+      modalCloseButton: {
+        padding: 8,
+      },
+      modalCloseButtonText: {
+        fontSize: 14,
+        fontFamily: "poppins-medium",
+        color: THEME.primary,
+      },
+      recipientsList: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        maxHeight: "70%",
+      },
+      recipientCard: {
+        backgroundColor: THEME.card,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+      },
+      recipientCardHeader: {
+        marginBottom: 10,
+      },
+      recipientCardName: {
+        fontSize: 16,
+        fontFamily: "poppins-bold",
+        color: THEME.text,
+        marginBottom: 4,
+      },
+      recipientCardTypeBadge: {
+        backgroundColor: "rgba(31, 105, 105, 0.1)",
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 12,
+        alignSelf: "flex-start",
+      },
+      recipientCardTypeBadgeText: {
+        fontSize: 12,
+        fontFamily: "poppins-medium",
+        color: THEME.primary,
+      },
+      recipientCardDetails: {
+        marginTop: 4,
+      },
+      recipientCardDetailRow: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        marginBottom: 6,
+      },
+      recipientCardDetailText: {
+        fontSize: 13,
+        fontFamily: "poppins-medium",
+        color: THEME.text,
+        marginLeft: 8,
+        flex: 1,
+      },
+      
+      summaryContainer: {
+        marginTop: 24,
+        marginHorizontal: 20,
+        backgroundColor: THEME.card,
+        borderRadius: 16,
+        padding: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+      },
+      summaryRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 8,
+      },
+      summaryLabel: {
+        fontSize: 14,
+        fontFamily: "poppins-medium",
+        color: THEME.textMuted,
+      },
+      summaryValue: {
+        fontSize: 14,
+        fontFamily: "poppins-medium",
+        color: THEME.text,
+      },
+      checkoutContainer: {
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: 20,
+        paddingBottom: Platform.OS === "ios" ? 30 : 20,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        overflow: "hidden",
+      },
+      checkoutButton: {
+        borderRadius: 16,
+        overflow: "hidden",
+        shadowColor: THEME.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+      },
+      checkoutButtonDisabled: {
+        opacity: 0.8,
+      },
+      checkoutButtonGradient: {
+        paddingVertical: 16,
+        alignItems: "center",
+        justifyContent: "center",
+      },
+      checkoutButtonText: {
+        fontSize: 15,
+        color: THEME.textLight,
+        fontFamily: "poppins-medium",
+      },
 });
