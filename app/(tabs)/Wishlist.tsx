@@ -32,7 +32,7 @@ import {
   FileText,
   AlertTriangle,
   Check,
-  Shirt,
+  ShoppingCart,
   Activity,
 } from "react-native-feather"
 import { getLocalStorage } from "@/service/Storage"
@@ -80,7 +80,7 @@ const categories = [
   {
     value: "Clothes",
     label: "Clothes & Garments",
-    icon: Shirt,
+    icon: ShoppingCart,
     color: "#14CC60",
   },
   {

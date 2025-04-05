@@ -253,7 +253,9 @@ export default function Food() {
               paymentMethod: selectedPayment,
               timestamp: Timestamp.now(),
               donorId: userId,
-
+              recipientId: selectedRecipient.uid,
+              recipientName: selectedRecipient.organizationDetails.name,
+              recipientType: selectedRecipient.organizationDetails.type,
             };
 
               // Store in Firebase Firestore

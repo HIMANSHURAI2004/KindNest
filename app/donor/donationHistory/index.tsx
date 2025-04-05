@@ -29,6 +29,7 @@ import {
   Grid,
   X,
   ArrowLeft,
+  User,
 } from "react-native-feather"
 import { database as db } from "@/config/FirebaseConfig"
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getCountFromServer, getDocs, Timestamp, query, where } from "firebase/firestore"
@@ -325,6 +326,33 @@ const extractTime = (timestamp: Timestamp | string) => {
   });
 };
 
+const formatISTTimestamp = (timestamp: Timestamp): string => {
+  const date = timestamp.toDate();
+
+  // Convert to IST (UTC+5:30)
+  const istOffset = 5.5 * 60 * 60 * 1000; // milliseconds
+  const istDate = new Date(date.getTime() + istOffset);
+
+  return istDate.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "medium",
+  });
+};
+
+const extractDate = (timestamp: any): string => {
+  if (!timestamp?.toDate) return "Invalid timestamp";
+
+  const dateObj = timestamp.toDate(); // Convert Firestore Timestamp to JS Date
+  return dateObj.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+
+
 const DonationHistory = () => {
   const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -452,7 +480,7 @@ const DonationHistory = () => {
             </View>
             <View>
               <Text style={styles.donationType}>{item.category || item.Category} Donation</Text>
-              <Text style={styles.donationDate}>{formatDate(item.timestamp)}</Text>
+              <Text style={styles.donationDate}>{extractDate(item.timestamp)}</Text>
             </View>
           </View>
 
@@ -490,6 +518,10 @@ const DonationHistory = () => {
                 <Text style={styles.viewDetailsText}>View Full Details</Text>
                 <ChevronRight width={16} height={16} color={THEME.primary} />
               </TouchableOpacity>
+              <View style={styles.wishlistItemRequester}>
+                <User width={14} height={14} color={THEME.textMuted} />
+                <Text style={styles.wishlistItemRequesterText}>Recieved by: {item.recipientName} ({item.recipientType})</Text>
+              </View>
             </View>
           ) }
           {
@@ -546,7 +578,7 @@ const DonationHistory = () => {
         </View>
 
         <Text style={styles.gridCardType}>{item.category || item.Category}</Text>
-        <Text style={styles.gridCardDate}>{formatDate(item.timestamp)}</Text>
+        <Text style={styles.gridCardDate}>{extractDate(item.timestamp)}</Text>
 
         {item.amount > 0 && <Text style={styles.gridCardAmount}>₹{item.amount.toFixed(2)}</Text>}
         {item.totalAmount > 0 && <Text style={styles.gridCardAmount}>₹{item.totalAmount.toFixed(2)}</Text>}
@@ -1128,6 +1160,19 @@ const styles = StyleSheet.create({
     color: THEME.textMuted,
     textAlign: "center",
     marginTop: 8,
+  },
+  wishlistItemRequester: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 0, 0, 0.05)",
+  },
+  wishlistItemRequesterText: {
+    fontSize: 13,
+    color: THEME.textMuted,
+    marginLeft: 6,
+    fontStyle: "italic",
   },
 })
 
