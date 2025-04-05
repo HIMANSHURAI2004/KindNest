@@ -8,7 +8,7 @@ import { ArrowLeft } from "react-native-feather"
 const { width, height } = Dimensions.get("window")
 
 const THEME = {
-  primary: "#1f6969",
+  primary: "#0B5351" ,
   primaryLight: "#2a8a8a",
   primaryDark: "#184f4f",
   secondary: "#f8b400",
@@ -24,28 +24,28 @@ const categories = [
   {
     id: "food",
     title: "Food",
-    icon: "https://cdn-icons-png.flaticon.com/128/706/706195.png",
+    icon: "https://hips.hearstapps.com/hmg-prod/images/food-bank-donations-1670258739.jpg",
     description: "Provide healthy meals and fight hunger in communities.",
     gradientColors: ["#1f6969", "#2a8a8a"],
   },
   {
     id: "clothes",
     title: "Clothes",
-    icon: "https://cdn-icons-png.flaticon.com/128/2954/2954918.png",
+    icon: "https://t4.ftcdn.net/jpg/03/07/44/67/360_F_307446785_ANJdwWGpWT1EC7Adl3Y8ukdANFT8M0RN.jpg",
     description: "Donate clothes to bring warmth, comfort, and dignity.",
     gradientColors: ["#1f6969", "#2a8a8a"],
   },
   {
     id: "money",
     title: "Money",
-    icon: "https://cdn-icons-png.flaticon.com/128/625/625599.png",
+    icon: "https://img.freepik.com/premium-photo/charity-finances-funding-investment-people-concept-man-putting-euro-money-into-donation-box_380164-151490.jpg",
     description: "Support impactful causes and help transform lives.",
     gradientColors: ["#1f6969", "#2a8a8a"],
   },
   {
     id: "other",
     title: "Other",
-    icon: "https://cdn-icons-png.flaticon.com/128/1187/1187525.png",
+    icon: "https://img.freepik.com/premium-photo/box-full-used-toys-cloths-books-stationery-donation_49149-816.jpg",
     description: "Give in any way—every act of kindness matters.",
     gradientColors: ["#1f6969", "#2a8a8a"],
   },
@@ -67,15 +67,15 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
             <ArrowLeft width={20} height={20} color={THEME.textLight} />
         </TouchableOpacity>
-        <TouchableOpacity  style={styles.navButton}>
-          <Text style={styles.navButtonText}>Donor</Text>
+        <TouchableOpacity  style={styles.navButton} onPress={() => router.replace('/donor/donationHistory')}>
+        <Image source={{ uri: "https://cdn-icons-png.flaticon.com/128/2822/2822687.png" }} style= {{height:20 , width:20}} contentFit="contain" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
-            <Image source={{ uri: "https://cdn-icons-png.flaticon.com/128/11038/11038496.png" }} style={styles.categoryIcon} contentFit="contain" />
+            <Image source={{ uri: "https://cdn-icons-png.flaticon.com/128/11038/11038496.png" }} style={styles.titleIcon} contentFit="contain" />
           </View>
           <Text style={styles.appName}>Welcome to KindNest</Text>
         </View>
@@ -90,9 +90,9 @@ export default function HomeScreen() {
             style={styles.categoryCardWrapper}
             onPress={() => handleCategoryPress(category.id)}
           >
-            <LinearGradient colors={category.gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.categoryCard}>
+            <LinearGradient colors={["#0B5351", "#092327"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.categoryCard}>
               <View style={styles.iconContainer}>
-                <Image source={{ uri: category.icon }} style={styles.categoryIcon} contentFit="contain" />
+                <Image source={{ uri: category.icon }} style={styles.categoryIcon}  />
               </View>
               <View style={styles.categoryContent}>
                 <Text style={styles.categoryTitle}>{category.title}</Text>
@@ -200,9 +200,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 16,
   },
-  categoryIcon: {
+  titleIcon: {
     width: 40,
     height: 40,
+  },
+  categoryIcon: {
+    width: 62,
+    height: 62,
+    borderRadius: 8,
   },
   categoryContent: {
     flex: 1,

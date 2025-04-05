@@ -7,7 +7,7 @@ import OpenAI from "openai";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Markdown from 'react-native-markdown-display'; 
 
-const AIAssistantScreen = () => {
+export default function AIAssistantScreen()  {
     interface Message {
       _id: string;
       text: string;
@@ -199,22 +199,4 @@ const styles = StyleSheet.create({
         marginRight: 10,
       },
   });
-
-export default AIAssistantScreen;
-
-// import React, { Component } from 'react'
-// import { Text, View } from 'react-native'
-
-// export class chat extends Component {
-//   render() {
-//     return (
-//       <View>
-//         <Text> textInComponent </Text>
-//       </View>
-//     )
-//   }
-// }
-
-// export default chat
-
 

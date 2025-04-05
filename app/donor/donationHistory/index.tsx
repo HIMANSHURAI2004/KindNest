@@ -28,6 +28,7 @@ import {
   List,
   Grid,
   X,
+  ArrowLeft,
 } from "react-native-feather"
 
 const { width } = Dimensions.get("window")
@@ -242,6 +243,10 @@ const DonationHistory = () => {
     outputRange: [0, 180],
   })
 
+  const handleGoBack = () => {
+    router.replace("/(tabs)")
+  }
+
   const renderDonationCard = ({ item }: { item: any }) => {
     const isExpanded = selectedDonation === item.id
     const DonationIcon = getDonationIcon(item.type)
@@ -348,6 +353,11 @@ const DonationHistory = () => {
     <View style={styles.container}>
       <LinearGradient colors={["#0B5351", "#092327"]} style={styles.headerGradient}>
         <View style={styles.header}>
+          {/* Back Button */}
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
+            <ArrowLeft width={20} height={20} color={THEME.textLight} />
+          </TouchableOpacity>
+
           <View style={styles.headerContent}>
             <BarChart2 width={28} height={28} color={THEME.textLight} />
             <Text style={styles.headerTitle}>Donation History</Text>
@@ -445,7 +455,11 @@ const DonationHistory = () => {
               style={[styles.categoryFilter, selectedCategory === "Clothes" && styles.categoryFilterActive]}
               onPress={() => setSelectedCategory("Clothes")}
             >
-              <ShoppingCart width={16} height={16} color={selectedCategory === "Clothes" ? THEME.textLight : THEME.clothes} />
+              <ShoppingCart
+                width={16}
+                height={16}
+                color={selectedCategory === "Clothes" ? THEME.textLight : THEME.clothes}
+              />
               <Text
                 style={[styles.categoryFilterText, selectedCategory === "Clothes" && styles.categoryFilterTextActive]}
               >
@@ -535,11 +549,25 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
+    position: "relative",
+  },
+  backButton: {
+    position: "absolute",
+    left: 16,
+    top: 0,
+    zIndex: 10,
+    width: 35,
+    height: 35,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
+    paddingLeft: 40, // Make space for the back button
   },
   headerTitle: {
     fontSize: 28,
@@ -648,8 +676,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     padding: 16,
     gap: 10,
-    height:110,
-    borderRadius:16,
+    height: 110,
+    borderRadius: 16,
     backgroundColor: "#092327", // Ensure background is solid
   },
   categoryFilter: {

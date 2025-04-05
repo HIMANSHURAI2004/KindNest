@@ -224,6 +224,20 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
+          
+          {/* Donation History Button (Only for Donors) */}
+          {category === "donor" && (
+            <TouchableOpacity
+              className="bg-white rounded-2xl shadow-md p-4 mb-6 flex-row items-center justify-between"
+              onPress={() => router.replace("/donor/donationHistory")}
+            >
+              <View className="flex-row items-center">
+                <MaterialIcons name="history" size={24} color={THEME.primary} />
+                <Text className="text-base font-medium ml-3">Donation History</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color={THEME.textMuted} />
+            </TouchableOpacity>
+          )}
 
           {/* Buttons */}
           <TouchableOpacity className="w-full mb-3" onPress={handleUpdateProfile} disabled={updating}>

@@ -150,7 +150,7 @@ export default function Money() {
 
       {/* Header */}
       <LinearGradient
-        colors={[THEME.primary, THEME.primaryDark]}
+        colors={["#0B5351", "#092327"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -280,7 +280,7 @@ export default function Money() {
       <BlurView intensity={80} tint="light" style={styles.checkoutContainer}>
         <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
           <LinearGradient
-            colors={[THEME.primary, THEME.primaryDark]}
+            colors={["#0B5351", "#092327"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.checkoutButtonGradient}

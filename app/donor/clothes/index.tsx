@@ -435,7 +435,7 @@ export default function ClothesCategoryScreen() {
 
       {/* Header */}
       <LinearGradient
-        colors={[THEME.primary, THEME.primaryDark]}
+        colors={["#0B5351", "#092327"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -679,7 +679,7 @@ export default function ClothesCategoryScreen() {
       <BlurView intensity={80} tint="light" style={styles.scheduleButtonContainer}>
         <TouchableOpacity style={styles.scheduleButton} onPress={handleScheduleDonation}>
           <LinearGradient
-            colors={[THEME.primary, THEME.primaryDark]}
+            colors={["#0B5351", "#092327"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.scheduleButtonGradient}

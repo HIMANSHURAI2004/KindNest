@@ -209,7 +209,7 @@ const handleCheckout = async () => {
 
       {/* Header */}
       <LinearGradient
-        colors={[THEME.primary, THEME.primaryDark]}
+        colors={["#0B5351", "#092327"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -320,7 +320,7 @@ const handleCheckout = async () => {
       <BlurView intensity={80} tint="light" style={styles.checkoutContainer}>
         <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
           <LinearGradient
-            colors={[THEME.primary, THEME.primaryDark]}
+            colors={["#0B5351", "#092327"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.checkoutButtonGradient}
