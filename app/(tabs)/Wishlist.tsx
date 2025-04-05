@@ -35,6 +35,7 @@ import {
   Shirt,
   Activity,
 } from "react-native-feather"
+import { getLocalStorage } from "@/service/Storage"
 
 const { width } = Dimensions.get("window")
 
@@ -44,6 +45,8 @@ type WishlistItem = {
   category: string
   description: string
   requester: string
+  userId : string
+  status : string
 }
 
 const THEME = {
@@ -145,7 +148,17 @@ const Wishlist = () => {
 
     setLoading(true)
     try {
-      const wishlistData = { name, category, description, requester }
+
+      const userInfo = await getLocalStorage("userDetail");
+      const userId = userInfo?.uid || userInfo?.id;
+
+      if (!userId) {
+        Alert.alert("Error", "User ID not found. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
+      const wishlistData = { name, category, description, requester, recipientId : userId, status : 'pending' }
 
       if (editingId) {
         const wishlistRef = doc(db, "wishlist", editingId)
@@ -238,11 +251,16 @@ const Wishlist = () => {
               >
                 <AntDesign name="delete" size={16} color={THEME.error} />
               </TouchableOpacity>
+              {item.status && <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
+                      <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status}</Text>
+                    </View>}
             </View>
           </View>
 
           <View style={styles.wishlistItemDetails}>
+            
             <Text style={styles.wishlistItemDescription}>{item.description}</Text>
+            {/* <Text style={styles.wishlistItemRequesterText}>Status: {item.status}</Text> */}
             <View style={styles.wishlistItemRequester}>
               <User width={14} height={14} color={THEME.textMuted} />
               <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
@@ -722,6 +740,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
     textAlign: "center",
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
 })
 

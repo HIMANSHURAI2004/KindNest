@@ -32,6 +32,7 @@ import {
 import { useRouter } from 'expo-router';
 import { collection, addDoc } from "firebase/firestore";
 import { database } from "../../../config/FirebaseConfig";
+import { getLocalStorage } from "@/service/Storage";
 
 // Theme colors
 const THEME = {
@@ -352,6 +353,13 @@ export default function Other() {
           onPress: async () => {
             try {
               // Prepare donation data
+              const userInfo = await getLocalStorage("userDetail");
+                const userId = userInfo?.uid || userInfo?.id;
+
+                if (!userId) {
+                  Alert.alert("Error", "User ID not found. Please log in again.");
+                  return;
+                }
               const donationData = {
                 Category : "Others",
                 selectedItems,
@@ -361,6 +369,7 @@ export default function Other() {
                 selectedDate: selectedDate.toISOString(),
                 selectedTimeSlot,
                 timestamp: new Date().toISOString(),
+                donorId : userId,
               }
   
               // Store donation in Firestore

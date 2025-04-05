@@ -19,9 +19,11 @@ import { ArrowLeft, Minus, Plus } from "react-native-feather"
 import { useRouter } from "expo-router"
 import { collection, addDoc } from "firebase/firestore";
 import { database } from "../../../config/FirebaseConfig";
+import { getLocalStorage } from "@/service/Storage"
 
 // Theme colors
 const THEME = {
+  
   primary: "#1f6969",
   primaryLight: "#2a8a8a",
   primaryDark: "#184f4f",
@@ -174,6 +176,13 @@ const handleCheckout = async () => {
         onPress: async () => {
           try {
             // Prepare order data
+            const userInfo = await getLocalStorage("userDetail");
+            const userId = userInfo?.uid || userInfo?.id;
+
+            if (!userId) {
+              Alert.alert("Error", "User ID not found. Please log in again.");
+              return;
+            }
             const orderData = {
               Category : "Food",
               items: Object.entries(selectedItems)
@@ -186,6 +195,8 @@ const handleCheckout = async () => {
               totalAmount,
               paymentMethod: selectedPayment,
               timestamp: new Date().toISOString(),
+              donorId: userId,
+
             };
 
             // Store in Firebase Firestore
