@@ -1,7 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, ActivityIndicator } from "react-native"
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
+  Modal,
+} from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { getLocalStorage, setLocalStorage, RemoveLocalStorage } from "@/service/Storage"
 import { LinearGradient } from "expo-linear-gradient"
@@ -9,6 +19,7 @@ import { useRouter } from "expo-router"
 import { signOut, updatePassword } from "firebase/auth"
 import { auth } from "@/config/FirebaseConfig"
 import { Feather, MaterialIcons } from "@expo/vector-icons"
+import { doc, updateDoc, getFirestore } from "firebase/firestore"
 
 const THEME = {
   primary: "#1f6969",
@@ -23,16 +34,34 @@ const THEME = {
   textMuted: "#7c8a97",
 }
 
+// Organization types
+const ORGANIZATION_TYPES = ["Old Age Home", "Orphanage", "NGO"]
+
 export default function ProfileScreen() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [category, setCategory] = useState("")
-  const [userInfo, setUserInfo] = useState<{ name?: string; email?: string; profilePic?: string } | null>(null)
+  const [userInfo, setUserInfo] = useState<{
+    name?: string
+    email?: string
+    profilePic?: string
+    uid?: string
+    displayName?: string
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
 
+  // Organization details states
+  const [organizationType, setOrganizationType] = useState("")
+  const [organizationName, setOrganizationName] = useState("")
+  const [organizationAddress, setOrganizationAddress] = useState("")
+  const [organizationContact, setOrganizationContact] = useState("")
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false)
+  const [organizationDetailsSet, setOrganizationDetailsSet] = useState(false)
+
   const router = useRouter()
+  const db = getFirestore()
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -40,6 +69,18 @@ export default function ProfileScreen() {
         setLoading(true)
         const data = await getLocalStorage("userDetail")
         const userCategory = await getLocalStorage("category")
+        
+        // Fetch organization details if user is a recipient
+        if (userCategory === "recipient") {
+          const orgDetails = await getLocalStorage("organizationDetails")
+          if (orgDetails) {
+            setOrganizationType(orgDetails.type || "")
+            setOrganizationName(orgDetails.name || "")
+            setOrganizationAddress(orgDetails.address || "")
+            setOrganizationContact(orgDetails.contact || "")
+            setOrganizationDetailsSet(!!orgDetails.type)
+          }
+        }
 
         if (data) {
           setUserInfo(data)
@@ -66,16 +107,56 @@ export default function ProfileScreen() {
       return
     }
 
+    // Validate organization details for recipients
+    if (category === "recipient") {
+      if (!organizationName || !organizationAddress || !organizationContact) {
+        Alert.alert("Error", "Please fill in all organization details.")
+        return
+      }
+
+      if (!organizationType && !organizationDetailsSet) {
+        Alert.alert("Error", "Please select an organization type.")
+        return
+      }
+    }
+
     try {
       setUpdating(true)
       const updatedUser = { ...(userInfo || {}), name, email }
       await setLocalStorage("userDetail", updatedUser)
       setUserInfo(updatedUser)
 
+      // Save organization details for recipients
+      if (category === "recipient") {
+        const orgDetails = {
+          type: organizationType,
+          name: organizationName,
+          address: organizationAddress,
+          contact: organizationContact,
+        }
+        await setLocalStorage("organizationDetails", orgDetails)
+        setOrganizationDetailsSet(!!organizationType)
+
+        // Update Firebase database with organization details
+        if (userInfo?.uid) {
+          const userDocRef = doc(db, "users", userInfo.uid)
+          await updateDoc(userDocRef, {
+            organizationDetails: {
+              type: organizationType,
+              name: organizationName,
+              address: organizationAddress,
+              contact: organizationContact,
+            },
+          })
+        } else {
+          console.error("User ID not found, cannot update Firebase database")
+        }
+      }
+
       if (password) {
         if (auth.currentUser) {
           await updatePassword(auth.currentUser, password)
-          Alert.alert("Success", "Password updated successfully!")
+          Alert.alert("Success", "Profile and password updated successfully!")
           setPassword("")
         } else {
           Alert.alert("Error", "No authenticated user found.")
@@ -84,25 +165,30 @@ export default function ProfileScreen() {
         Alert.alert("Success", "Profile updated successfully!")
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to update profile. Please try again.")
       console.error("Update Error:", error)
+      Alert.alert("Error", "Failed to update profile. Please try again.")
     } finally {
       setUpdating(false)
     }
   }
-
 
   const handleLogout = async () => {
     try {
       await RemoveLocalStorage("userDetail")
       await RemoveLocalStorage("role")
       await RemoveLocalStorage("category")
+      await RemoveLocalStorage("organizationDetails")
       await signOut(auth)
       router.replace("/login/SignIn")
     } catch (error) {
       console.error("Logout Error:", error)
       Alert.alert("Error", "Failed to logout. Please try again.")
     }
+  }
+
+  const selectOrganizationType = (type: string) => {
+    setOrganizationType(type)
+    setShowTypeDropdown(false)
   }
 
   if (loading) {
@@ -118,7 +204,8 @@ export default function ProfileScreen() {
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={["#0B5351", "#092327"]} start={{ x: 0, y: 0 }}
+          colors={["#0B5351", "#092327"]}
+          start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           className="w-full pt-8 pb-12 items-center rounded-b-[40px] shadow-lg"
         >
@@ -131,15 +218,11 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          Profile Image
+          {/* Profile Image */}
           <View className="w-28 h-28 rounded-full overflow-hidden border-4 border-white items-center justify-center bg-white shadow-xl">
-            {userInfo?.profilePic ? (
-              <Image source={{ uri: userInfo.profilePic }} className="w-full h-full" />
-            ) : (
               <View className="w-full h-full bg-gray-200 items-center justify-center">
                 <Feather name="user" size={50} color="#666" />
               </View>
-            )}
           </View>
 
           
@@ -159,7 +242,7 @@ export default function ProfileScreen() {
             {/* Form Fields */}
             <View className="space-y-5">
               <View>
-                <Text className=" font-medium text-gray-600 my-2">Full Name</Text>
+                <Text className="font-medium text-gray-600 my-2">Full Name</Text>
                 <View className="flex-row items-center border border-gray-200 rounded-xl bg-gray-50 px-3">
                   <Feather name="user" size={18} color={THEME.textMuted} />
                   <TextInput
@@ -172,7 +255,7 @@ export default function ProfileScreen() {
               </View>
 
               <View>
-                <Text className=" font-medium text-gray-600 my-2">Email Address</Text>
+                <Text className="font-medium text-gray-600 my-2">Email Address</Text>
                 <View className="flex-row items-center border border-gray-200 rounded-xl bg-gray-50 px-3">
                   <Feather name="mail" size={18} color={THEME.textMuted} />
                   <TextInput
@@ -187,7 +270,7 @@ export default function ProfileScreen() {
               </View>
 
               <View>
-                <Text className=" font-medium text-gray-600 my-2">New Password</Text>
+                <Text className="font-medium text-gray-600 my-2">New Password</Text>
                 <View className="flex-row items-center border border-gray-200 rounded-xl bg-gray-50 px-3">
                   <Feather name="lock" size={18} color={THEME.textMuted} />
                   <TextInput
@@ -202,6 +285,81 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
+
+          {/* Organization Details - Only for Recipients */}
+          {category === "recipient" && (
+            <View className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <Text className="text-lg font-bold mb-6 text-gray-800">Organization Details</Text>
+
+              {/* Organization Form Fields */}
+              <View className="space-y-5">
+                <View>
+                  <Text className="font-medium text-gray-600 my-2">Organization Type</Text>
+                  <TouchableOpacity
+                    className="flex-row items-center justify-between border border-gray-200 rounded-xl bg-gray-50 px-3 py-3"
+                    onPress={() => !organizationDetailsSet && setShowTypeDropdown(true)}
+                    disabled={organizationDetailsSet}
+                  >
+                    <View className="flex-row items-center">
+                      <MaterialIcons name="business" size={18} color={THEME.textMuted} />
+                      <Text className={`ml-2 ${!organizationType ? "text-gray-400" : "text-gray-800"}`}>
+                        {organizationType || "Select organization type"}
+                      </Text>
+                    </View>
+                    {!organizationDetailsSet && <Feather name="chevron-down" size={18} color={THEME.textMuted} />}
+                  </TouchableOpacity>
+                  {organizationDetailsSet && (
+                    <Text className="text-xs text-amber-600 mt-1 ml-1">
+                      Organization type cannot be changed once set
+                    </Text>
+                  )}
+                </View>
+
+                <View>
+                  <Text className="font-medium text-gray-600 my-2">Organization Name</Text>
+                  <View className="flex-row items-center border border-gray-200 rounded-xl bg-gray-50 px-3">
+                    <MaterialIcons name="apartment" size={18} color={THEME.textMuted} />
+                    <TextInput
+                      className="flex-1 p-3 ml-2"
+                      placeholder="Enter organization name"
+                      value={organizationName}
+                      onChangeText={setOrganizationName}
+                    />
+                  </View>
+                </View>
+
+                <View>
+                  <Text className="font-medium text-gray-600 my-2">Address</Text>
+                  <View className="flex-row items-start border border-gray-200 rounded-xl bg-gray-50 px-3 py-2">
+                    <MaterialIcons name="location-on" size={18} color={THEME.textMuted} style={{ marginTop: 10 }} />
+                    <TextInput
+                      className="flex-1 p-2 ml-2"
+                      placeholder="Enter organization address"
+                      value={organizationAddress}
+                      onChangeText={setOrganizationAddress}
+                      multiline
+                      numberOfLines={3}
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </View>
+
+                <View>
+                  <Text className="font-medium text-gray-600 my-2">Contact Number</Text>
+                  <View className="flex-row items-center border border-gray-200 rounded-xl bg-gray-50 px-3">
+                    <Feather name="phone" size={18} color={THEME.textMuted} />
+                    <TextInput
+                      className="flex-1 p-3 ml-2"
+                      placeholder="Enter contact number"
+                      value={organizationContact}
+                      onChangeText={setOrganizationContact}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* Account Type */}
           <View className="bg-white rounded-2xl shadow-md p-6 mb-6">
@@ -224,7 +382,7 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
-          
+
           {/* Donation History Button (Only for Donors) */}
           {category === "donor" && (
             <TouchableOpacity
@@ -263,6 +421,45 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Organization Type Dropdown Modal */}
+      <Modal
+        visible={showTypeDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowTypeDropdown(false)}
+      >
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+          activeOpacity={1}
+          onPress={() => setShowTypeDropdown(false)}
+        >
+          <View className="bg-white rounded-xl mx-6 mt-40 overflow-hidden">
+            <View className="p-4 border-b border-gray-200">
+              <Text className="text-lg font-bold text-gray-800">Select Organization Type</Text>
+            </View>
+
+            {ORGANIZATION_TYPES.map((type, index) => (
+              <TouchableOpacity
+                key={index}
+                className="p-4 border-b border-gray-100 flex-row items-center"
+                onPress={() => selectOrganizationType(type)}
+              >
+                <MaterialIcons
+                  name={type === "Old Age Home" ? "elderly" : type === "Orphanage" ? "child-care" : "business"}
+                  size={20}
+                  color={THEME.primary}
+                />
+                <Text className="text-gray-800 ml-3">{type}</Text>
+              </TouchableOpacity>
+            ))}
+
+            <TouchableOpacity className="p-4 bg-gray-100" onPress={() => setShowTypeDropdown(false)}>
+              <Text className="text-center text-gray-600 font-medium">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   )
 }

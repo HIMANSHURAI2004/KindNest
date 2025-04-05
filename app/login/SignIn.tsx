@@ -35,9 +35,15 @@ const SignIn = () => {
     
           if (userSnap.exists()) {
             const userData = userSnap.data();
+            console.log(userData);
+            
             if (userData.category) {
               await setLocalStorage("category",userData.category);
-              router.replace(userData.category === "donor" ? "/donor" : "/recipient");
+              router.replace(userData.category === "donor" ? "/donor" : "/");
+            }
+            if(userData.category === 'recipient')
+            {
+              await setLocalStorage("organizationDetails",userData.organizationDetails);
               return;
             }
           }
