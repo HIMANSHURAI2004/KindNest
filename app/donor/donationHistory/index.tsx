@@ -30,8 +30,18 @@ import {
   X,
   ArrowLeft,
 } from "react-native-feather"
+import { database as db } from "@/config/FirebaseConfig"
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getCountFromServer, getDocs, Timestamp } from "firebase/firestore"
+import { set } from "firebase/database"
 
 const { width } = Dimensions.get("window")
+
+interface DonationItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
 
 const THEME = {
   primary: "#1f6969",
@@ -92,16 +102,16 @@ const dummyDonations = [
     status: "Completed",
     amount: 45.5,
   },
-  {
-    id: "5",
-    type: "Food",
-    items: ["Vegetables (2kg)", "Fruits (3kg)", "Bread (2 loaves)"],
-    date: "2023-03-10",
-    time: "9:00 AM",
-    location: "Shelter Home",
-    status: "Completed",
-    amount: 28.9,
-  },
+  // {
+  //   id: "5",
+  //   type: "Food",
+  //   items: ["Vegetables (2kg)", "Fruits (3kg)", "Bread (2 loaves)"],
+  //   date: "2023-03-10",
+  //   time: "9:00 AM",
+  //   location: "Shelter Home",
+  //   status: "Completed",
+  //   amount: 28.9,
+  // },
   {
     id: "6",
     type: "Clothes",
@@ -153,7 +163,7 @@ const getDonationIcon = (type: string) => {
       return ShoppingCart
     case "Money":
       return DollarSign
-    case "Other":
+    case "Others":
       return Package
     default:
       return Package
@@ -169,12 +179,92 @@ const getDonationColor = (type: string) => {
       return THEME.clothes
     case "Money":
       return THEME.money
-    case "Other":
+    case "Others":
       return THEME.other
     default:
       return THEME.primary
   }
 }
+
+const fetchDonationCount = async (collectionName: string) => {
+  try {
+    const collectionRef = collection(db, collectionName)
+    const snapshot = await getCountFromServer(collectionRef)
+    return snapshot.data().count
+  } catch (error) {
+    console.error("Error getting donation count:", error)
+    return 0
+  }
+}
+
+const fetchTotalMonetaryDonations = async (): Promise<number> => {
+  try {
+    const monetaryCollection = collection(db, "Monetary Donations"); // Ensure the collection name matches exactly
+    const snapshot = await getDocs(monetaryCollection);
+    
+    let totalAmount = 0;
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      
+      // Only add successful payments
+      // if (data.status === "Success" && typeof data.amount === "number") { // for later when payment is working
+      if (typeof data.amount === "number") {
+        totalAmount += data.amount;
+      }
+    });
+
+    return totalAmount;
+  } catch (error) {
+    console.error("Error fetching monetary donations:", error);
+    return 0;
+  }
+};
+
+const fetchDonationHistory = async (collectionName: string) => {
+  try {
+    const collectionRef = collection(db, collectionName)
+    const snapshot = await getDocs(collectionRef)
+    const donations = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+    return donations
+  } catch (error) {
+    console.error("Error fetching donation history:", error)
+    return []
+  }
+}
+
+// Utility function to shuffle an array
+const shuffleArray = (array: any[]) => {
+  return array.sort(() => Math.random() - 0.5);
+};
+
+const fetchAllDonations = async () => {
+  try {
+    const collections = ["Food Donations", "Clothing Donations", "Monetary Donations", "Other donations"];
+    
+    let allDonations: any[] = [];
+
+    // Fetch all donations from each collection
+    for (const collectionName of collections) {
+      const collectionRef = collection(db, collectionName);
+      const snapshot = await getDocs(collectionRef);
+      
+      const donations = snapshot.docs.map(doc => ({
+        id: doc.id,
+        type: collectionName, // Store collection name for reference
+        ...doc.data(),
+      }));
+
+      allDonations = [...allDonations, ...donations];
+    }
+
+    // Shuffle the donations
+    return shuffleArray(allDonations);
+  } catch (error) {
+    console.error("Error fetching donations:", error);
+    return [];
+  }
+};
 
 // Format date
 const formatDate = (dateString: string) => {
@@ -183,46 +273,106 @@ const formatDate = (dateString: string) => {
 }
 
 // Calculate statistics
-const calculateStatistics = (donations: any[]) => {
-  const totalDonations = donations.length
-  const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0)
+// const calculateStatistics = (donations: any[]) => {
+//   const totalDonations = donations.length
+//   const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0)
 
-  const categoryCounts = donations.reduce((acc: any, donation) => {
-    acc[donation.type] = (acc[donation.type] || 0) + 1
-    return acc
-  }, {})
+//   const categoryCounts = donations.reduce((acc: any, donation) => {
+//     acc[donation.type] = (acc[donation.type] || 0) + 1
+//     return acc
+//   }, {})
 
-  const categoryAmounts = donations.reduce((acc: any, donation) => {
-    acc[donation.type] = (acc[donation.type] || 0) + donation.amount
-    return acc
-  }, {})
+//   const categoryAmounts = donations.reduce((acc: any, donation) => {
+//     acc[donation.type] = (acc[donation.type] || 0) + donation.amount
+//     return acc
+//   }, {})
 
-  return {
-    totalDonations,
-    totalAmount,
-    categoryCounts,
-    categoryAmounts,
+//   return {
+//     totalDonations,
+//     totalAmount,
+//     categoryCounts,
+//     categoryAmounts,
+//   }
+// }
+
+const extractTime = (timestamp: Timestamp | string) => {
+  let date;
+
+  // If it's a Firestore Timestamp object, convert to Date
+  if (timestamp instanceof Timestamp) {
+    date = timestamp.toDate();
   }
-}
+  // If it's a string, convert it directly
+  else if (typeof timestamp === "string") {
+    date = new Date(timestamp);
+  } else {
+    return "Invalid Timestamp";
+  }
+
+  // Format the time (HH:MM:SS AM/PM)
+  return date.toLocaleTimeString("en-US", { 
+    hour: "2-digit", 
+    minute: "2-digit", 
+    // second: "2-digit", 
+    hour12: true 
+  });
+};
 
 const DonationHistory = () => {
   const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showFilters, setShowFilters] = useState(false)
-  const [filteredDonations, setFilteredDonations] = useState(dummyDonations)
   const [selectedDonation, setSelectedDonation] = useState<string | null>(null)
+  const [donationCounts, setDonationCounts] = useState({
+    Food: 0,
+    Clothes: 0,
+    Money: 0,
+    Other: 0,
+  });
+  const [totalDonations, setTotalDonations] = useState(0)
+  const [totalAmount, setTotalAmount] = useState(0)
+  const [donationHistory, setDonationHistory] = useState<any[]>([])
+  const [filteredDonations, setFilteredDonations] = useState(donationHistory)
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const foodCount = await fetchDonationCount("Food Donations");
+      const clothesCount = await fetchDonationCount("Clothing Donations");
+      const moneyCount = await fetchDonationCount("Monetary Donations");
+      const otherCount = await fetchDonationCount("Other donations");
+      const total = await fetchTotalMonetaryDonations()
+      setTotalAmount(total)
+  
+      setDonationCounts({
+        Food: foodCount,
+        Clothes: clothesCount,
+        Money: moneyCount,
+        Other: otherCount,
+      });
+      setTotalDonations(foodCount + clothesCount + moneyCount + otherCount)
+  
+      // Fetch all donations and apply global filtering
+      const allDonations = await fetchAllDonations();
+      setDonationHistory(allDonations);
+  
+      console.log("Donation History:", allDonations);
+      
+    };
+  
+    fetchCounts();
+  }, []);
 
   const filterAnimation = new Animated.Value(0)
 
   // Statistics
-  const stats = calculateStatistics(dummyDonations)
+  // const stats = calculateStatistics(dummyDonations)
 
   useEffect(() => {
     if (selectedCategory) {
-      setFilteredDonations(dummyDonations.filter((donation) => donation.type === selectedCategory))
+      setFilteredDonations(donationHistory.filter((donation) => (donation.category || donation.Category) === selectedCategory))
     } else {
-      setFilteredDonations(dummyDonations)
+      setFilteredDonations(donationHistory)
     }
   }, [selectedCategory])
 
@@ -249,8 +399,8 @@ const DonationHistory = () => {
 
   const renderDonationCard = ({ item }: { item: any }) => {
     const isExpanded = selectedDonation === item.id
-    const DonationIcon = getDonationIcon(item.type)
-    const donationColor = getDonationColor(item.type)
+    const DonationIcon = getDonationIcon(item.category || item.Category)
+    const donationColor = getDonationColor(item.category || item.Category)
 
     return (
       <TouchableOpacity
@@ -264,46 +414,67 @@ const DonationHistory = () => {
               <DonationIcon width={20} height={20} color={donationColor} />
             </View>
             <View>
-              <Text style={styles.donationType}>{item.type} Donation</Text>
-              <Text style={styles.donationDate}>{formatDate(item.date)}</Text>
+              <Text style={styles.donationType}>{item.category || item.Category} Donation</Text>
+              <Text style={styles.donationDate}>{formatDate(item.timestamp)}</Text>
             </View>
           </View>
 
-          <View style={styles.donationStatusContainer}>
-            {item.amount > 0 && <Text style={styles.donationAmount}>₹{item.amount.toFixed(2)}</Text>}
-            <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
-              <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status}</Text>
-            </View>
-          </View>
+          {(item.amount || item.totalAmount || item.totalItems) && <View style={styles.donationStatusContainer}>
+            {(item.amount > 0 || item.totalAmount > 0 ) && <Text style={styles.donationAmount}>₹{item.amount?.toFixed(2)  || item.totalAmount?.toFixed(2)}</Text>}
+            {item.totalItems > 0 && <Text style={styles.donationAmount}>{item.totalItems}</Text>}
+              {item.status && <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
+                <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status}</Text>
+              </View>}
+          </View>}
         </View>
 
         <View style={styles.donationCardBody}>
           <View style={styles.donationDetail}>
             <Clock width={16} height={16} color={THEME.textMuted} />
-            <Text style={styles.donationDetailText}>{item.time}</Text>
+            <Text style={styles.donationDetailText}>{item.selectedTimeSlot || extractTime(item.timestamp)}</Text>
           </View>
 
-          <View style={styles.donationDetail}>
+          {item.pickupAddress && <View style={styles.donationDetail}>
             <MapPin width={16} height={16} color={THEME.textMuted} />
-            <Text style={styles.donationDetailText}>{item.location}</Text>
-          </View>
+            <Text style={styles.donationDetailText}>{item.pickupAddress}</Text>
+          </View>}
 
-          {isExpanded && (
+          {item.items && isExpanded && (
             <View style={styles.expandedContent}>
               <Text style={styles.expandedTitle}>Donated Items:</Text>
-              {item.items.map((itemName: string, index: number) => (
+              {item.items.map((itemName : DonationItem , index: number) => (
                 <View key={index} style={styles.donatedItem}>
                   <View style={styles.donatedItemBullet} />
-                  <Text style={styles.donatedItemText}>{itemName}</Text>
+                  <Text style={styles.donatedItemText}>{itemName.name} ({itemName.quantity})</Text>
                 </View>
-              ))}
+              ))} 
 
               <TouchableOpacity style={styles.viewDetailsButton}>
                 <Text style={styles.viewDetailsText}>View Full Details</Text>
                 <ChevronRight width={16} height={16} color={THEME.primary} />
               </TouchableOpacity>
             </View>
-          )}
+          ) }
+          {
+            item.selectedItems && isExpanded && (
+              <View style={styles.expandedContent}>
+                <Text style={styles.expandedTitle}>Donated Items:</Text>
+                {Object.entries(item.selectedItems)
+                  .filter(([key, value]) => value > 0) // Only include items with value > 0
+                  .map(([itemName, _], index) => (
+                    <View key={index} style={styles.donatedItem}>
+                      <View style={styles.donatedItemBullet} />
+                      <Text style={styles.donatedItemText}>{itemName}</Text>
+                    </View>
+                  ))}
+  
+                <TouchableOpacity style={styles.viewDetailsButton}>
+                  <Text style={styles.viewDetailsText}>View Full Details</Text>
+                  <ChevronRight width={16} height={16} color={THEME.primary} />
+                </TouchableOpacity>
+              </View>
+            )
+          }
         </View>
 
         <View style={styles.cardFooter}>
@@ -324,8 +495,8 @@ const DonationHistory = () => {
   }
 
   const renderGridItem = ({ item }: { item: any }) => {
-    const DonationIcon = getDonationIcon(item.type)
-    const donationColor = getDonationColor(item.type)
+    const DonationIcon = getDonationIcon(item.category || item.Category)
+    const donationColor = getDonationColor(item.category || item.Category)
 
     return (
       <TouchableOpacity
@@ -337,14 +508,16 @@ const DonationHistory = () => {
           <DonationIcon width={24} height={24} color={donationColor} />
         </View>
 
-        <Text style={styles.gridCardType}>{item.type}</Text>
-        <Text style={styles.gridCardDate}>{formatDate(item.date)}</Text>
+        <Text style={styles.gridCardType}>{item.category || item.Category}</Text>
+        <Text style={styles.gridCardDate}>{formatDate(item.timestamp)}</Text>
 
-        {item.amount > 0 && <Text style={styles.gridCardAmount}>${item.amount.toFixed(2)}</Text>}
+        {item.amount > 0 && <Text style={styles.gridCardAmount}>₹{item.amount.toFixed(2)}</Text>}
+        {item.totalAmount > 0 && <Text style={styles.gridCardAmount}>₹{item.totalAmount.toFixed(2)}</Text>}
+        {item.totalItems > 0 && <Text style={styles.gridCardAmount}>{item.totalItems} Items</Text>}
 
-        <View style={[styles.gridStatusBadge, { backgroundColor: `${THEME.primary}20` }]}>
+        {item.status && <View style={[styles.gridStatusBadge, { backgroundColor: `${THEME.primary}20` }]}>
           <Text style={[styles.gridStatusText, { color: THEME.primary }]}>{item.status}</Text>
-        </View>
+        </View>}
       </TouchableOpacity>
     )
   }
@@ -368,27 +541,27 @@ const DonationHistory = () => {
         {/* Statistics Cards */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.totalDonations}</Text>
+            <Text style={styles.statValue}>{totalDonations}</Text>
             <Text style={styles.statLabel}>Total Donations</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>₹{stats.totalAmount.toFixed(2)}</Text>
+            <Text style={styles.statValue}>₹{totalAmount.toFixed(2)}</Text>
             <Text style={styles.statLabel}>Total Amount</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.categoryCounts.Food || 0}</Text>
+            <Text style={styles.statValue}>{donationCounts.Food || 0}</Text>
             <Text style={styles.statLabel}>Food Donations</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.categoryCounts.Clothes || 0}</Text>
+            <Text style={styles.statValue}>{donationCounts.Clothes || 0}</Text>
             <Text style={styles.statLabel}>Clothes Donations</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.categoryCounts.Other || 0}</Text>
+            <Text style={styles.statValue}>{donationCounts.Other || 0}</Text>
             <Text style={styles.statLabel}>Other Donations</Text>
           </View>
         </ScrollView>
@@ -480,12 +653,12 @@ const DonationHistory = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.categoryFilter, selectedCategory === "Other" && styles.categoryFilterActive]}
-              onPress={() => setSelectedCategory("Other")}
+              style={[styles.categoryFilter, selectedCategory === "Others" && styles.categoryFilterActive]}
+              onPress={() => setSelectedCategory("Others")}
             >
-              <Package width={16} height={16} color={selectedCategory === "Other" ? THEME.textLight : THEME.other} />
+              <Package width={16} height={16} color={selectedCategory === "Others" ? THEME.textLight : THEME.other} />
               <Text
-                style={[styles.categoryFilterText, selectedCategory === "Other" && styles.categoryFilterTextActive]}
+                style={[styles.categoryFilterText, selectedCategory === "Others" && styles.categoryFilterTextActive]}
               >
                 Other
               </Text>

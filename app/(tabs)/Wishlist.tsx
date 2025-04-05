@@ -13,6 +13,8 @@ import {
   ImageBackground,
   Dimensions,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback
 } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore"
@@ -252,6 +254,7 @@ const Wishlist = () => {
   }
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
         <LinearGradient colors={["#0B5351", "#092327"]} start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }} style={styles.headerGradient}>
@@ -400,6 +403,7 @@ const Wishlist = () => {
       </LinearGradient>
 
     </View>
+    </TouchableWithoutFeedback>
   )
 }
 
