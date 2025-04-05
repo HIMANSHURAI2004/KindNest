@@ -253,12 +253,12 @@ const fetchAllDonations = async (donorId : string) => {
       const donations = snapshot.docs.map(doc => ({
         id: doc.id,
         type: collectionName, // Store collection name for reference
-        ...doc.data(),
+        ...(doc.data() as { timestamp?: { toMillis: () => number } }),
       }));
 
       allDonations = [...allDonations, ...donations];
     }
-
+    
      // Sort by timestamp (descending)
      allDonations.sort((a, b) => {
       const timeA = a.timestamp?.toMillis?.() || 0;

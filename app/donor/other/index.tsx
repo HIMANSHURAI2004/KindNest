@@ -30,7 +30,7 @@ import {
   ChevronUp,
 } from 'react-native-feather';
 import { useRouter } from 'expo-router';
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { database } from "../../../config/FirebaseConfig";
 import { getLocalStorage } from "@/service/Storage";
 
@@ -368,7 +368,7 @@ export default function Other() {
                 dropAddress,
                 selectedDate: selectedDate.toISOString(),
                 selectedTimeSlot,
-                timestamp: new Date().toISOString(),
+                timestamp: Timestamp.now(),
                 donorId : userId,
               }
   

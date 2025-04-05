@@ -18,10 +18,11 @@ import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
 import { ArrowLeft } from "react-native-feather"
 import { useRouter } from "expo-router"
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { database } from "../../../config/FirebaseConfig";
 import QRCode from "react-native-qrcode-svg"
 import { getLocalStorage } from "@/service/Storage"
+
 
 // Theme colors
 const THEME = {
@@ -132,7 +133,7 @@ export default function Money() {
                 Category : "Money",
                 amount,
                 paymentMethod: selectedPayment,
-                timestamp: new Date().toISOString(),
+                timestamp: Timestamp.now(),
                 donorId : userId,
               }
   

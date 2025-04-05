@@ -31,7 +31,7 @@ import {
   ChevronRight,
 } from "react-native-feather"
 import { useRouter } from "expo-router"
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { database } from "../../../config/FirebaseConfig";
 import axios from "axios";
 import { getLocalStorage } from "@/service/Storage"
@@ -419,7 +419,7 @@ export default function ClothesCategoryScreen() {
                   dropAddress: dropAddress || "Not specified",
                   selectedDate: selectedDate.toISOString(),
                   selectedTimeSlot,
-                  timestamp: new Date().toISOString(),
+                  timestamp: Timestamp.now(),
                   donorId : userId,
                 }
   
