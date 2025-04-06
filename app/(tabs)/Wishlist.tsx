@@ -138,7 +138,7 @@ const Wishlist = () => {
       if (!userInfo?.uid) return;
   
       const wishlistRef = collection(db, "wishlist");
-      console.log("Wishlist Ref:", wishlistRef); // Debugging line
+      // console.log("Wishlist Ref:", wishlistRef); // Debugging line
       const q = query(wishlistRef, where("recipientId", "==", userInfo.uid));
   
       unsubscribe = onSnapshot(q, (snapshot) => {

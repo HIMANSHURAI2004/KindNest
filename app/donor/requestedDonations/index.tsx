@@ -238,7 +238,7 @@ const RequestedDonations = () => {
       const q = query(wishlistRef, where("status", "==", "pending"))
 
       const snapshot = await getDocs(q)
-      console.log(snapshot)
+      // console.log(snapshot)
 
       const items = snapshot.docs.map((doc) => ({
         id: doc.id,

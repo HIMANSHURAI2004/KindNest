@@ -80,15 +80,6 @@ const TabLayout = () => {
         }} 
       />
       <Tabs.Screen 
-        name="Chat" 
-        options={{ 
-          tabBarLabel: 'Chat',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="logo-wechat" size={size} color={color} />
-          ),
-        }} 
-      />
-      <Tabs.Screen 
         name="Profile" 
         options={{ 
           tabBarLabel: 'Profile',

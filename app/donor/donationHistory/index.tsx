@@ -11,6 +11,7 @@ import {
   Platform,
   FlatList,
   Animated,
+  ActivityIndicator,
 } from "react-native"
 import { useRouter } from "expo-router"
 import { LinearGradient } from "expo-linear-gradient"
@@ -30,19 +31,45 @@ import {
   X,
   ArrowLeft,
   User,
+  Phone,
+  Home,
 } from "react-native-feather"
 import { database as db } from "@/config/FirebaseConfig"
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getCountFromServer, getDocs, Timestamp, query, where } from "firebase/firestore"
-import { set } from "firebase/database"
+import { collection, getDocs, Timestamp, query, where, doc, getDoc, getCountFromServer } from "firebase/firestore"
 import { getLocalStorage } from "@/service/Storage"
 
 const { width } = Dimensions.get("window")
 
 interface DonationItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
+  id: string
+  name: string
+  price: number
+  quantity: number
+}
+
+interface WishlistItem {
+  id: string
+  name: string
+  category: string
+  description: string
+  requester: string
+  recipientId: string
+  status: string
+  donorId: string
+  fulfilledAt?: Timestamp
+  timestamp?: Timestamp
+}
+
+interface RecipientInfo {
+  id: string
+  displayName: string
+  email?: string
+  organizationDetails?: {
+    name: string
+    type: string
+    address: string
+    contact: string
+  }
 }
 
 const THEME = {
@@ -60,101 +87,8 @@ const THEME = {
   clothes: "#2196F3",
   money: "#4CAF50",
   other: "#9C27B0",
+  success: "#4CAF50",
 }
-
-// Dummy data for donation history
-const dummyDonations = [
-  {
-    id: "1",
-    type: "Food",
-    items: ["Rice (5kg)", "Pasta (2 packs)", "Canned Beans (4)"],
-    date: "2023-04-15",
-    time: "10:30 AM",
-    location: "Old Age Home, Green Street",
-    status: "Completed",
-    amount: 35.75,
-  },
-  {
-    id: "2",
-    type: "Clothes",
-    items: ["Shirts (3)", "Pants (2)", "Jackets (1)"],
-    date: "2023-04-02",
-    time: "2:15 PM",
-    location: "Orphanage, Sunshine Road",
-    status: "Completed",
-    amount: 0,
-  },
-  {
-    id: "3",
-    type: "Money",
-    items: ["Direct Donation"],
-    date: "2023-03-28",
-    time: "11:45 AM",
-    location: "NGO Foundation",
-    status: "Completed",
-    amount: 100.0,
-  },
-  {
-    id: "4",
-    type: "Other",
-    items: ["Books (10)", "Toys (5)", "Stationery Set (2)"],
-    date: "2023-03-15",
-    time: "4:30 PM",
-    location: "Community Center",
-    status: "Completed",
-    amount: 45.5,
-  },
-  // {
-  //   id: "5",
-  //   type: "Food",
-  //   items: ["Vegetables (2kg)", "Fruits (3kg)", "Bread (2 loaves)"],
-  //   date: "2023-03-10",
-  //   time: "9:00 AM",
-  //   location: "Shelter Home",
-  //   status: "Completed",
-  //   amount: 28.9,
-  // },
-  {
-    id: "6",
-    type: "Clothes",
-    items: ["Winter Coats (2)", "Sweaters (3)", "Gloves (5 pairs)"],
-    date: "2023-02-25",
-    time: "1:00 PM",
-    location: "Homeless Shelter",
-    status: "Completed",
-    amount: 0,
-  },
-  {
-    id: "7",
-    type: "Money",
-    items: ["Monthly Contribution"],
-    date: "2023-02-15",
-    time: "10:00 AM",
-    location: "Children's Foundation",
-    status: "Completed",
-    amount: 50.0,
-  },
-  {
-    id: "8",
-    type: "Other",
-    items: ["Medical Supplies", "First Aid Kits (2)"],
-    date: "2023-02-05",
-    time: "3:30 PM",
-    location: "Rural Health Center",
-    status: "Completed",
-    amount: 75.25,
-  },
-  {
-    id: "9",
-    type: "Food",
-    items: ["Milk Packets (10)", "Cereal Boxes (5)"],
-    date: "2023-01-28",
-    time: "8:45 AM",
-    location: "Children's Home",
-    status: "Completed",
-    amount: 42.3,
-  },
-]
 
 // Get icon for donation type
 const getDonationIcon = (type: string) => {
@@ -164,8 +98,10 @@ const getDonationIcon = (type: string) => {
     case "Clothes":
       return ShoppingCart
     case "Money":
+    case "Monetary":
       return DollarSign
     case "Others":
+    case "Other":
       return Package
     default:
       return Package
@@ -180,178 +116,194 @@ const getDonationColor = (type: string) => {
     case "Clothes":
       return THEME.clothes
     case "Money":
+    case "Monetary":
       return THEME.money
     case "Others":
+    case "Other":
       return THEME.other
     default:
       return THEME.primary
   }
 }
 
+// Cache for recipient information to avoid repeated fetches
+const recipientCache: Record<string, RecipientInfo> = {}
+
+// Fetch recipient information from users collection
+const fetchRecipientInfo = async (recipientId: string): Promise<RecipientInfo | null> => {
+  if (!recipientId) return null
+
+  // Check cache first
+  if (recipientCache[recipientId]) {
+    return recipientCache[recipientId]
+  }
+
+  try {
+    const userRef = doc(db, "users", recipientId)
+    const userSnap = await getDoc(userRef)
+
+    if (userSnap.exists()) {
+      const userData = userSnap.data()
+      const recipientInfo = {
+        id: recipientId,
+        displayName: userData.displayName || "Anonymous Recipient",
+        email: userData.email,
+        organizationDetails: userData.organizationDetails || null,
+      }
+
+      // Cache the result
+      recipientCache[recipientId] = recipientInfo
+      return recipientInfo
+    }
+
+    return null
+  } catch (error) {
+    console.error("Error fetching recipient info:", error)
+    return null
+  }
+}
+
 const fetchDonationCount = async (collectionName: string, donorId: string): Promise<number> => {
   try {
-    const collectionRef = collection(db, collectionName);
-    const q = query(collectionRef, where("donorId", "==", donorId)); // Filter by donorId
-    const snapshot = await getCountFromServer(q); // Get filtered count
-    console.log("Filtered Donation Count:", snapshot.data());
-    return snapshot.data().count;
+    const collectionRef = collection(db, collectionName)
+    const q = query(collectionRef, where("donorId", "==", donorId)) // Filter by donorId
+    const snapshot = await getCountFromServer(q) // Get filtered count
+    return snapshot.data().count
   } catch (error) {
-    console.error("Error getting filtered donation count:", error);
-    return 0;
+    console.error("Error getting filtered donation count:", error)
+    return 0
   }
-};
+}
 
-const fetchTotalMonetaryDonations = async (donorId : string): Promise<number> => {
+const fetchTotalMonetaryDonations = async (donorId: string): Promise<number> => {
   try {
-    const monetaryCollection = collection(db, "Monetary Donations");
-    const q = query(monetaryCollection, where("donorId", "==", donorId)); // Filter by donorId
-    const snapshot = await getDocs(q);
-    
-    let totalAmount = 0;
+    const monetaryCollection = collection(db, "Monetary Donations")
+    const q = query(monetaryCollection, where("donorId", "==", donorId)) // Filter by donorId
+    const snapshot = await getDocs(q)
+
+    let totalAmount = 0
 
     snapshot.forEach((doc) => {
-      const data = doc.data();
-      
+      const data = doc.data()
+
       // Only add successful payments
-      // if (data.status === "Success" && typeof data.amount === "number") { // for later when payment is working
       if (typeof data.amount === "number") {
-        totalAmount += data.amount;
+        totalAmount += data.amount
       }
-    });
+    })
 
-    return totalAmount;
+    return totalAmount
   } catch (error) {
-    console.error("Error fetching monetary donations:", error);
-    return 0;
+    console.error("Error fetching monetary donations:", error)
+    return 0
   }
-};
+}
 
-const fetchDonationHistory = async (collectionName: string) => {
+const fetchAllDonations = async (donorId: string) => {
   try {
-    const collectionRef = collection(db, collectionName)
-    const snapshot = await getDocs(collectionRef)
-    const donations = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-    return donations
+    const collections = ["Food Donations", "Clothing Donations", "Monetary Donations", "Other donations"]
+
+    let allDonations: any[] = []
+
+    // Fetch all donations from each collection
+    for (const collectionName of collections) {
+      const collectionRef = collection(db, collectionName)
+      const q = query(collectionRef, where("donorId", "==", donorId))
+      const snapshot = await getDocs(q)
+
+      const donations = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        type: collectionName.replace(" Donations", ""), // Store collection name for reference
+        ...(doc.data() as { timestamp?: { toMillis: () => number } }),
+      }))
+
+      allDonations = [...allDonations, ...donations]
+    }
+
+    // Sort by timestamp (descending)
+    allDonations.sort((a, b) => {
+      const timeA = a.timestamp?.toMillis?.() || 0
+      const timeB = b.timestamp?.toMillis?.() || 0
+      return timeB - timeA
+    })
+
+    return allDonations
   } catch (error) {
-    console.error("Error fetching donation history:", error)
+    console.error("Error fetching donations:", error)
     return []
   }
 }
 
-
-const fetchAllDonations = async (donorId : string) => {
+// Fetch fulfilled wishlist donations
+const fetchFulfilledWishlistDonations = async (donorId: string) => {
   try {
-    const collections = ["Food Donations", "Clothing Donations", "Monetary Donations", "Other donations"];
-    
-    let allDonations: any[] = [];
+    const wishlistRef = collection(db, "wishlist")
+    const q = query(wishlistRef, where("donorId", "==", donorId), where("status", "==", "fulfilled"))
+    const snapshot = await getDocs(q)
 
-    // Fetch all donations from each collection
-    for (const collectionName of collections) {
-      const collectionRef = collection(db, collectionName);
-      const q = query(collectionRef, where("donorId", "==", donorId));
-      const snapshot = await getDocs(q);
-      
-      const donations = snapshot.docs.map(doc => ({
-        id: doc.id,
-        type: collectionName, // Store collection name for reference
-        ...(doc.data() as { timestamp?: { toMillis: () => number } }),
-      }));
+    const wishlistItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as WishlistItem[]
 
-      allDonations = [...allDonations, ...donations];
-    }
-    
-     // Sort by timestamp (descending)
-     allDonations.sort((a, b) => {
-      const timeA = a.timestamp?.toMillis?.() || 0;
-      const timeB = b.timestamp?.toMillis?.() || 0;
-      return timeB - timeA;
-    });
+    // Sort by fulfilledAt timestamp (descending)
+    wishlistItems.sort((a, b) => {
+      const timeA = a.fulfilledAt?.toMillis?.() || a.timestamp?.toMillis?.() || 0
+      const timeB = b.fulfilledAt?.toMillis?.() || b.timestamp?.toMillis?.() || 0
+      return timeB - timeA
+    })
 
-    return allDonations;
+    // Fetch recipient info for each donation
+    const itemsWithRecipientInfo = await Promise.all(
+      wishlistItems.map(async (item) => {
+        const recipientInfo = await fetchRecipientInfo(item.recipientId)
+        return {
+          ...item,
+          recipientInfo,
+        }
+      }),
+    )
+
+    return itemsWithRecipientInfo
   } catch (error) {
-    console.error("Error fetching donations:", error);
-    return [];
+    console.error("Error fetching fulfilled wishlist donations:", error)
+    return []
   }
-};
-
-// Format date
-const formatDate = (dateString: string) => {
-  const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" }
-  return new Date(dateString).toLocaleDateString("en-US", options)
 }
 
-// Calculate statistics
-// const calculateStatistics = (donations: any[]) => {
-//   const totalDonations = donations.length
-//   const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0)
-
-//   const categoryCounts = donations.reduce((acc: any, donation) => {
-//     acc[donation.type] = (acc[donation.type] || 0) + 1
-//     return acc
-//   }, {})
-
-//   const categoryAmounts = donations.reduce((acc: any, donation) => {
-//     acc[donation.type] = (acc[donation.type] || 0) + donation.amount
-//     return acc
-//   }, {})
-
-//   return {
-//     totalDonations,
-//     totalAmount,
-//     categoryCounts,
-//     categoryAmounts,
-//   }
-// }
-
+// Extract time from timestamp
 const extractTime = (timestamp: Timestamp | string) => {
-  let date;
+  let date
 
   // If it's a Firestore Timestamp object, convert to Date
   if (timestamp instanceof Timestamp) {
-    date = timestamp.toDate();
+    date = timestamp.toDate()
   }
   // If it's a string, convert it directly
   else if (typeof timestamp === "string") {
-    date = new Date(timestamp);
+    date = new Date(timestamp)
   } else {
-    return "Invalid Timestamp";
+    return "Invalid Timestamp"
   }
 
-  // Format the time (HH:MM:SS AM/PM)
-  return date.toLocaleTimeString("en-US", { 
-    hour: "2-digit", 
-    minute: "2-digit", 
-    // second: "2-digit", 
-    hour12: true 
-  });
-};
-
-const formatISTTimestamp = (timestamp: Timestamp): string => {
-  const date = timestamp.toDate();
-
-  // Convert to IST (UTC+5:30)
-  const istOffset = 5.5 * 60 * 60 * 1000; // milliseconds
-  const istDate = new Date(date.getTime() + istOffset);
-
-  return istDate.toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    dateStyle: "medium",
-    timeStyle: "medium",
-  });
-};
+  // Format the time (HH:MM AM/PM)
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
+}
 
 const extractDate = (timestamp: any): string => {
-  if (!timestamp?.toDate) return "Invalid timestamp";
+  if (!timestamp?.toDate) return "Invalid timestamp"
 
-  const dateObj = timestamp.toDate(); // Convert Firestore Timestamp to JS Date
+  const dateObj = timestamp.toDate() // Convert Firestore Timestamp to JS Date
   return dateObj.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
-};
-
-
+  })
+}
 
 const DonationHistory = () => {
   const router = useRouter()
@@ -359,90 +311,118 @@ const DonationHistory = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
   const [showFilters, setShowFilters] = useState(false)
   const [selectedDonation, setSelectedDonation] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<"myDonations" | "fulfilled">("myDonations")
+  const [loading, setLoading] = useState(true)
+
   const [donationCounts, setDonationCounts] = useState({
     Food: 0,
     Clothes: 0,
     Money: 0,
     Other: 0,
-  });
+  })
+
   const [totalDonations, setTotalDonations] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
-  const [donationHistory, setDonationHistory] = useState<any[]>([])
-  const [filteredDonations, setFilteredDonations] = useState(donationHistory)
+  const [myDonations, setMyDonations] = useState<any[]>([])
+  const [fulfilledDonations, setFulfilledDonations] = useState<any[]>([])
+  const [filteredDonations, setFilteredDonations] = useState<any[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
 
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const userInfo = await getLocalStorage("userDetail");
-      setUserId(userInfo?.uid || userInfo?.id || null);
-
-      const allDonations = await fetchAllDonations(userInfo?.uid || userInfo?.id || null);
-      setDonationHistory(allDonations);
-    };
-
-    fetchData();
-  }, [userId, selectedCategory, viewMode, selectedDonation, donationCounts, totalDonations, totalAmount]);
+  const filterAnimation = new Animated.Value(0)
 
   useEffect(() => {
-    const fetchInitialData = async () => {
-      const userInfo = await getLocalStorage("userDetail");
-      const uid = userInfo?.uid || userInfo?.id || null;
-      setUserId(uid);
-  
-      const allDonations = await fetchAllDonations(userInfo?.uid || userInfo?.id || null);
-      setDonationHistory(allDonations);
-  
-      // Initial filter
-      if (selectedCategory) {
-        setFilteredDonations(allDonations.filter((donation) => (donation.category || donation.Category) === selectedCategory));
-      } else {
-        setFilteredDonations(allDonations);
-      }
-  
+    const fetchUserData = async () => {
+      setLoading(true)
+      const userInfo = await getLocalStorage("userDetail")
+      const uid = userInfo?.uid || userInfo?.id || null
+      setUserId(uid)
+
       if (uid) {
-        const foodCount = await fetchDonationCount("Food Donations", uid);
-        const clothesCount = await fetchDonationCount("Clothing Donations", uid);
-        const moneyCount = await fetchDonationCount("Monetary Donations", uid);
-        const otherCount = await fetchDonationCount("Other donations", uid);
-        const total = await fetchTotalMonetaryDonations(uid);
-        setTotalAmount(total);
+        // Fetch direct donations
+        const directDonations = await fetchAllDonations(uid)
+        setMyDonations(directDonations)
+
+        // Fetch fulfilled wishlist donations
+        const wishlistDonations = await fetchFulfilledWishlistDonations(uid)
+        setFulfilledDonations(wishlistDonations)
+
+        // Fetch donation counts
+        const foodCount = await fetchDonationCount("Food Donations", uid)
+        const clothesCount = await fetchDonationCount("Clothing Donations", uid)
+        const moneyCount = await fetchDonationCount("Monetary Donations", uid)
+        const otherCount = await fetchDonationCount("Other donations", uid)
+        const total = await fetchTotalMonetaryDonations(uid)
+
+        setTotalAmount(total)
         setDonationCounts({
           Food: foodCount,
           Clothes: clothesCount,
           Money: moneyCount,
           Other: otherCount,
-        });
-        setTotalDonations(foodCount + clothesCount + moneyCount + otherCount);
+        })
+
+        setTotalDonations(foodCount + clothesCount + moneyCount + otherCount + wishlistDonations.length)
       }
-    };
-  
-    fetchInitialData();
-  }, [userId, selectedCategory, selectedDonation,totalDonations]);
-  
 
-  const filterAnimation = new Animated.Value(0)
+      setLoading(false)
+    }
 
-  // Statistics
-  // const stats = calculateStatistics(dummyDonations)
+    fetchUserData()
+  }, [])
 
   useEffect(() => {
-      const fetchAndFilterDonations = async () => {
-        const allDonations = await fetchAllDonations(userId || "");
-        setDonationHistory(allDonations);
-        
-        if (selectedCategory) {
-          setFilteredDonations(allDonations.filter((donation) => (donation.category || donation.Category) === selectedCategory));
-        } else {
-          setFilteredDonations(allDonations);
-        }
-      };
-  
-      fetchAndFilterDonations();
-    }, [selectedCategory, selectedDonation, totalDonations, totalAmount, userId]);
+    // Filter donations based on active tab and selected category
+    if (activeTab === "myDonations") {
+      if (selectedCategory) {
+        setFilteredDonations(
+          myDonations.filter((donation) => {
+            const donationType = donation.type?.toLowerCase() || ""
+            const donationCategory = donation.category?.toLowerCase() || ""
+            const selectedCategoryLower = selectedCategory.toLowerCase()
 
-  // Fix the filter panel animation and toggle
-  // Replace the toggleFilters function with this improved version:
+            // Handle special cases for Monetary/Money and Clothing/Clothes
+            if (selectedCategoryLower === "money" && (donationType === "monetary" || donationType.includes("money"))) {
+              return true
+            }
+
+            if (
+              selectedCategoryLower === "clothes" &&
+              (donationType === "clothing" || donationType.includes("cloth"))
+            ) {
+              return true
+            }
+
+            return donationType.includes(selectedCategoryLower) || donationCategory.includes(selectedCategoryLower)
+          }),
+        )
+      } else {
+        setFilteredDonations(myDonations)
+      }
+    } else {
+      if (selectedCategory) {
+        setFilteredDonations(
+          fulfilledDonations.filter((donation) => {
+            const category = donation.category?.toLowerCase() || ""
+            const selectedCategoryLower = selectedCategory.toLowerCase()
+
+            // Handle special cases for Monetary/Money and Clothing/Clothes
+            if (selectedCategoryLower === "money" && (category === "monetary" || category.includes("money"))) {
+              return true
+            }
+
+            if (selectedCategoryLower === "clothes" && (category === "clothing" || category.includes("cloth"))) {
+              return true
+            }
+
+            return category.includes(selectedCategoryLower)
+          }),
+        )
+      } else {
+        setFilteredDonations(fulfilledDonations)
+      }
+    }
+  }, [activeTab, selectedCategory, myDonations, fulfilledDonations])
+
   const toggleFilters = () => {
     const newValue = !showFilters
     setShowFilters(newValue)
@@ -462,10 +442,11 @@ const DonationHistory = () => {
     router.replace("/(tabs)")
   }
 
-  const renderDonationCard = ({ item }: { item: any }) => {
+  const renderMyDonationCard = ({ item }: { item: any }) => {
     const isExpanded = selectedDonation === item.id
-    const DonationIcon = getDonationIcon(item.category || item.Category)
-    const donationColor = getDonationColor(item.category || item.Category)
+    const donationType = item.type || item.category || "Other"
+    const DonationIcon = getDonationIcon(donationType)
+    const donationColor = getDonationColor(donationType)
 
     return (
       <TouchableOpacity
@@ -479,18 +460,24 @@ const DonationHistory = () => {
               <DonationIcon width={20} height={20} color={donationColor} />
             </View>
             <View>
-              <Text style={styles.donationType}>{item.category || item.Category} Donation</Text>
+              <Text style={styles.donationType}>{donationType} Donation</Text>
               <Text style={styles.donationDate}>{extractDate(item.timestamp)}</Text>
             </View>
           </View>
 
-          {(item.amount || item.totalAmount || item.totalItems) && <View style={styles.donationStatusContainer}>
-            {(item.amount > 0 || item.totalAmount > 0 ) && <Text style={styles.donationAmount}>₹{item.amount?.toFixed(2)  || item.totalAmount?.toFixed(2)}</Text>}
-            {item.totalItems > 0 && <Text style={styles.donationAmount}>{item.totalItems}</Text>}
-              {item.status && <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
-                <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status}</Text>
-              </View>}
-          </View>}
+          {(item.amount || item.totalAmount || item.totalItems) && (
+            <View style={styles.donationStatusContainer}>
+              {(item.amount > 0 || item.totalAmount > 0) && (
+                <Text style={styles.donationAmount}>₹{item.amount?.toFixed(2) || item.totalAmount?.toFixed(2)}</Text>
+              )}
+              {item.totalItems > 0 && <Text style={styles.donationAmount}>{item.totalItems} items</Text>}
+              {item.status && (
+                <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
+                  <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.donationCardBody}>
@@ -499,51 +486,161 @@ const DonationHistory = () => {
             <Text style={styles.donationDetailText}>{item.selectedTimeSlot || extractTime(item.timestamp)}</Text>
           </View>
 
-          {item.pickupAddress && <View style={styles.donationDetail}>
-            <MapPin width={16} height={16} color={THEME.textMuted} />
-            <Text style={styles.donationDetailText}>{item.pickupAddress}</Text>
-          </View>}
+          {item.pickupAddress && (
+            <View style={styles.donationDetail}>
+              <MapPin width={16} height={16} color={THEME.textMuted} />
+              <Text style={styles.donationDetailText}>{item.pickupAddress}</Text>
+            </View>
+          )}
 
           {item.items && isExpanded && (
             <View style={styles.expandedContent}>
               <Text style={styles.expandedTitle}>Donated Items:</Text>
-              {item.items.map((itemName : DonationItem , index: number) => (
+              {item.items.map((itemObj: DonationItem, index: number) => (
                 <View key={index} style={styles.donatedItem}>
                   <View style={styles.donatedItemBullet} />
-                  <Text style={styles.donatedItemText}>{itemName.name} ({itemName.quantity})</Text>
+                  <Text style={styles.donatedItemText}>
+                    {itemObj.name} ({itemObj.quantity})
+                  </Text>
                 </View>
-              ))} 
-
-              <TouchableOpacity style={styles.viewDetailsButton}>
-                <Text style={styles.viewDetailsText}>View Full Details</Text>
-                <ChevronRight width={16} height={16} color={THEME.primary} />
-              </TouchableOpacity>
+              ))}
               <View style={styles.wishlistItemRequester}>
                 <User width={14} height={14} color={THEME.textMuted} />
-                <Text style={styles.wishlistItemRequesterText}>Recieved by: {item.recipientName} ({item.recipientType})</Text>
+                <Text style={styles.wishlistItemRequesterText}>
+                  Received by: {item.recipientName || "Recipient"} {item.recipientType ? `(${item.recipientType})` : ""}
+                </Text>
               </View>
             </View>
-          ) }
-          {
-            item.selectedItems && isExpanded && (
-              <View style={styles.expandedContent}>
-                <Text style={styles.expandedTitle}>Donated Items:</Text>
-                {Object.entries(item.selectedItems)
-                  .filter(([key, value]) => value > 0) // Only include items with value > 0
-                  .map(([itemName, _], index) => (
-                    <View key={index} style={styles.donatedItem}>
-                      <View style={styles.donatedItemBullet} />
-                      <Text style={styles.donatedItemText}>{itemName}</Text>
-                    </View>
-                  ))}
-  
-                <TouchableOpacity style={styles.viewDetailsButton}>
-                  <Text style={styles.viewDetailsText}>View Full Details</Text>
-                  <ChevronRight width={16} height={16} color={THEME.primary} />
-                </TouchableOpacity>
+          )}
+
+          {item.selectedItems && isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={styles.expandedTitle}>Donated Items:</Text>
+              {Object.entries(item.selectedItems)
+                .filter(([_, value]) => value > 0) // Only include items with value > 0
+                .map(([itemName, _], index) => (
+                  <View key={index} style={styles.donatedItem}>
+                    <View style={styles.donatedItemBullet} />
+                    <Text style={styles.donatedItemText}>{itemName}</Text>
+                  </View>
+                ))}
+            </View>
+          )}
+          {!item.items && !item.selectedItems && isExpanded && (
+            <View style={styles.expandedContent}>
+              <View style={styles.wishlistItemRequester}>
+                <User width={14} height={14} color={THEME.textMuted} />
+                <Text style={styles.wishlistItemRequesterText}>
+                  Received by: {item.recipientName || item.recipientId || "Recipient"}{" "}
+                  {item.recipientType ? `(${item.recipientType})` : ""}
+                </Text>
               </View>
-            )
-          }
+            </View>
+          )}
+        </View>
+
+        <View style={styles.cardFooter}>
+          <TouchableOpacity
+            style={styles.expandButton}
+            onPress={() => setSelectedDonation(isExpanded ? null : item.id)}
+          >
+            <Text style={styles.expandButtonText}>{isExpanded ? "Show Less" : "Show More"}</Text>
+            {isExpanded ? (
+              <ChevronDown width={16} height={16} color={THEME.textMuted} />
+            ) : (
+              <ChevronRight width={16} height={16} color={THEME.textMuted} />
+            )}
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    )
+  }
+
+  const renderFulfilledDonationCard = ({ item }: { item: any }) => {
+    const isExpanded = selectedDonation === item.id
+    const CategoryIcon = getDonationIcon(item.category)
+    const categoryColor = getDonationColor(item.category)
+    const recipientInfo = item.recipientInfo
+
+    return (
+      <TouchableOpacity
+        style={[styles.donationCard, isExpanded && styles.donationCardExpanded]}
+        activeOpacity={0.9}
+        onPress={() => setSelectedDonation(isExpanded ? null : item.id)}
+      >
+        <View style={styles.donationCardHeader}>
+          <View style={styles.donationTypeContainer}>
+            <View style={[styles.donationIconContainer, { backgroundColor: `${categoryColor}20` }]}>
+              <CategoryIcon width={20} height={20} color={categoryColor} />
+            </View>
+            <View>
+              <Text style={styles.donationType}>{item.name}</Text>
+              <Text style={styles.donationDate}>{item.category}</Text>
+            </View>
+          </View>
+
+          <View style={styles.donationStatusContainer}>
+            <View style={[styles.statusBadge, { backgroundColor: `${THEME.success}20` }]}>
+              <Text style={[styles.statusText, { color: THEME.success }]}>FULFILLED</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.donationCardBody}>
+          <View style={styles.donationDetail}>
+            <Clock width={16} height={16} color={THEME.textMuted} />
+            <Text style={styles.donationDetailText}>
+              {item.fulfilledAt ? extractDate(item.fulfilledAt) : extractDate(item.timestamp)}
+            </Text>
+          </View>
+
+          <View style={styles.donationDetail}>
+            <User width={16} height={16} color={THEME.textMuted} />
+            <Text style={styles.donationDetailText}>Requested by: {item.requester}</Text>
+          </View>
+
+          {recipientInfo && recipientInfo.organizationDetails && (
+            <View style={styles.donationDetail}>
+              <Home width={16} height={16} color={THEME.textMuted} />
+              <Text style={styles.donationDetailText}>
+                Organization: {recipientInfo.organizationDetails.name || "Not specified"}
+              </Text>
+            </View>
+          )}
+
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={styles.expandedTitle}>Request Description:</Text>
+              <Text style={styles.descriptionText}>{item.description}</Text>
+
+              {recipientInfo && recipientInfo.organizationDetails && (
+                <View style={styles.organizationDetails}>
+                  <Text style={styles.organizationTitle}>Recipient Organization Details:</Text>
+
+                  <View style={styles.organizationDetail}>
+                    <Home width={14} height={14} color={THEME.primary} />
+                    <Text style={styles.organizationDetailText}>
+                      Type: {recipientInfo.organizationDetails.type || "Not specified"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.organizationDetail}>
+                    <MapPin width={14} height={14} color={THEME.primary} />
+                    <Text style={styles.organizationDetailText}>
+                      Address: {recipientInfo.organizationDetails.address || "No address provided"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.organizationDetail}>
+                    <Phone width={14} height={14} color={THEME.primary} />
+                    <Text style={styles.organizationDetailText}>
+                      Contact: {recipientInfo.organizationDetails.contact || "No contact provided"}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.cardFooter}>
@@ -564,8 +661,10 @@ const DonationHistory = () => {
   }
 
   const renderGridItem = ({ item }: { item: any }) => {
-    const DonationIcon = getDonationIcon(item.category || item.Category)
-    const donationColor = getDonationColor(item.category || item.Category)
+    const donationType = activeTab === "myDonations" ? item.type || item.category || "Other" : item.category
+    const DonationIcon = getDonationIcon(donationType)
+    const donationColor = getDonationColor(donationType)
+    const recipientInfo = activeTab === "fulfilled" ? item.recipientInfo : null
 
     return (
       <TouchableOpacity
@@ -577,16 +676,39 @@ const DonationHistory = () => {
           <DonationIcon width={24} height={24} color={donationColor} />
         </View>
 
-        <Text style={styles.gridCardType}>{item.category || item.Category}</Text>
-        <Text style={styles.gridCardDate}>{extractDate(item.timestamp)}</Text>
+        <Text style={styles.gridCardType}>{activeTab === "myDonations" ? donationType : item.name}</Text>
 
-        {item.amount > 0 && <Text style={styles.gridCardAmount}>₹{item.amount.toFixed(2)}</Text>}
-        {item.totalAmount > 0 && <Text style={styles.gridCardAmount}>₹{item.totalAmount.toFixed(2)}</Text>}
-        {item.totalItems > 0 && <Text style={styles.gridCardAmount}>{item.totalItems} Items</Text>}
+        {activeTab === "myDonations" && <Text style={styles.gridCardDate}>{extractDate(item.timestamp)}</Text>}
 
-        {item.status && <View style={[styles.gridStatusBadge, { backgroundColor: `${THEME.primary}20` }]}>
-          <Text style={[styles.gridStatusText, { color: THEME.primary }]}>{item.status}</Text>
-        </View>}
+        {activeTab === "fulfilled" && <Text style={styles.gridCardDate}>{item.category}</Text>}
+
+        {activeTab === "myDonations" && item.amount > 0 && (
+          <Text style={styles.gridCardAmount}>₹{item.amount.toFixed(2)}</Text>
+        )}
+
+        {activeTab === "myDonations" && item.totalAmount > 0 && (
+          <Text style={styles.gridCardAmount}>₹{item.totalAmount.toFixed(2)}</Text>
+        )}
+
+        {activeTab === "myDonations" && item.totalItems > 0 && (
+          <Text style={styles.gridCardAmount}>{item.totalItems} Items</Text>
+        )}
+
+        {activeTab === "fulfilled" && recipientInfo && recipientInfo.organizationDetails && (
+          <Text style={styles.gridCardOrg}>{recipientInfo.organizationDetails.name || "Organization"}</Text>
+        )}
+
+        {item.status && activeTab === "myDonations" && (
+          <View style={[styles.gridStatusBadge, { backgroundColor: `${THEME.primary}20` }]}>
+            <Text style={[styles.gridStatusText, { color: THEME.primary }]}>{item.status}</Text>
+          </View>
+        )}
+
+        {activeTab === "fulfilled" && (
+          <View style={[styles.gridStatusBadge, { backgroundColor: `${THEME.success}20` }]}>
+            <Text style={[styles.gridStatusText, { color: THEME.success }]}>FULFILLED</Text>
+          </View>
+        )}
       </TouchableOpacity>
     )
   }
@@ -630,13 +752,30 @@ const DonationHistory = () => {
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{donationCounts.Other || 0}</Text>
-            <Text style={styles.statLabel}>Other Donations</Text>
+            <Text style={styles.statValue}>{fulfilledDonations.length}</Text>
+            <Text style={styles.statLabel}>Fulfilled Requests</Text>
           </View>
         </ScrollView>
       </LinearGradient>
 
       <View style={styles.contentContainer}>
+        {/* Tab Selector */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "myDonations" && styles.activeTab]}
+            onPress={() => setActiveTab("myDonations")}
+          >
+            <Text style={[styles.tabText, activeTab === "myDonations" && styles.activeTabText]}>Donations</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "fulfilled" && styles.activeTab]}
+            onPress={() => setActiveTab("fulfilled")}
+          >
+            <Text style={[styles.tabText, activeTab === "fulfilled" && styles.activeTabText]}>Fulfilled Donations</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Filter and View Controls */}
         <View style={styles.controlsContainer}>
           <TouchableOpacity style={styles.filterButton} onPress={toggleFilters}>
@@ -722,12 +861,12 @@ const DonationHistory = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.categoryFilter, selectedCategory === "Others" && styles.categoryFilterActive]}
-              onPress={() => setSelectedCategory("Others")}
+              style={[styles.categoryFilter, selectedCategory === "Other" && styles.categoryFilterActive]}
+              onPress={() => setSelectedCategory("Other")}
             >
-              <Package width={16} height={16} color={selectedCategory === "Others" ? THEME.textLight : THEME.other} />
+              <Package width={16} height={16} color={selectedCategory === "Other" ? THEME.textLight : THEME.other} />
               <Text
-                style={[styles.categoryFilterText, selectedCategory === "Others" && styles.categoryFilterTextActive]}
+                style={[styles.categoryFilterText, selectedCategory === "Other" && styles.categoryFilterTextActive]}
               >
                 Other
               </Text>
@@ -739,12 +878,18 @@ const DonationHistory = () => {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Donations List/Grid */}
-        {viewMode === "list" ? (
+        {/* Loading Indicator */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={THEME.primary} />
+            <Text style={styles.loadingText}>Loading donation history...</Text>
+          </View>
+        ) : /* Donations List/Grid */
+        viewMode === "list" ? (
           <FlatList
             key="list"
             data={filteredDonations}
-            renderItem={renderDonationCard}
+            renderItem={activeTab === "myDonations" ? renderMyDonationCard : renderFulfilledDonationCard}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.donationsList}
             showsVerticalScrollIndicator={false}
@@ -752,7 +897,11 @@ const DonationHistory = () => {
               <View style={styles.emptyState}>
                 <Package width={50} height={50} color={THEME.textMuted} />
                 <Text style={styles.emptyStateText}>No donations found</Text>
-                <Text style={styles.emptyStateSubtext}>You haven't made any donations in this category yet</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  {activeTab === "myDonations"
+                    ? "You haven't made any direct donations yet"
+                    : "You haven't fulfilled any donation requests yet"}
+                </Text>
               </View>
             }
           />
@@ -770,7 +919,11 @@ const DonationHistory = () => {
               <View style={styles.emptyState}>
                 <Package width={50} height={50} color={THEME.textMuted} />
                 <Text style={styles.emptyStateText}>No donations found</Text>
-                <Text style={styles.emptyStateSubtext}>You haven't made any donations in this category yet</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  {activeTab === "myDonations"
+                    ? "You haven't made any direct donations yet"
+                    : "You haven't fulfilled any donation requests yet"}
+                </Text>
               </View>
             }
           />
@@ -853,6 +1006,31 @@ const styles = StyleSheet.create({
     marginTop: -20,
     paddingTop: 16,
   },
+  tabContainer: {
+    flexDirection: "row",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: "rgba(31, 105, 105, 0.1)",
+    borderRadius: 12,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  activeTab: {
+    backgroundColor: THEME.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: THEME.primary,
+  },
+  activeTabText: {
+    color: THEME.textLight,
+  },
   controlsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -908,7 +1086,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     position: "absolute", // Make it absolute positioned
-    top: 63, // Position it below the controls
+    top: 110, // Position it below the tabs and controls
     left: 0,
     right: 0,
     zIndex: 10, // Ensure it's above other content
@@ -947,6 +1125,17 @@ const styles = StyleSheet.create({
     top: 8,
     right: 8,
     padding: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: 50,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: THEME.textMuted,
   },
   donationsList: {
     paddingHorizontal: 16,
@@ -1041,7 +1230,7 @@ const styles = StyleSheet.create({
   expandedContent: {
     marginTop: 12,
     paddingTop: 12,
-    borderTopWidth: 1,
+    // borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.05)",
   },
   expandedTitle: {
@@ -1065,6 +1254,12 @@ const styles = StyleSheet.create({
   donatedItemText: {
     fontSize: 14,
     color: THEME.text,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: THEME.text,
+    lineHeight: 20,
+    marginBottom: 12,
   },
   viewDetailsButton: {
     flexDirection: "row",
@@ -1123,6 +1318,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: THEME.text,
     marginBottom: 4,
+    textAlign: "center",
   },
   gridCardDate: {
     fontSize: 13,
@@ -1134,6 +1330,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: THEME.primary,
     marginBottom: 8,
+  },
+  gridCardOrg: {
+    fontSize: 13,
+    color: THEME.primary,
+    marginBottom: 8,
+    fontWeight: "500",
+    textAlign: "center",
   },
   gridStatusBadge: {
     paddingHorizontal: 10,
@@ -1173,6 +1376,28 @@ const styles = StyleSheet.create({
     color: THEME.textMuted,
     marginLeft: 6,
     fontStyle: "italic",
+  },
+  organizationDetails: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "rgba(31, 105, 105, 0.05)",
+    borderRadius: 8,
+  },
+  organizationTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: THEME.primary,
+    marginBottom: 10,
+  },
+  organizationDetail: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  organizationDetailText: {
+    fontSize: 14,
+    color: THEME.text,
+    marginLeft: 8,
   },
 })
 
