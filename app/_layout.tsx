@@ -14,7 +14,8 @@ export default function RootLayout() {
 
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="category" />
-      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(tabsDonor)" />
+      <Stack.Screen name="(tabsRecipient)" />
       <Stack.Screen name="login" />
       <Stack.Screen name="donor" />
       <Stack.Screen name="recipient" />

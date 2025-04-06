@@ -32,7 +32,7 @@ export default function CategorySelection() {
     await updateDoc(userRef, { category: role });
 
     await setLocalStorage("category", role);
-    router.replace(role === "donor" ? "/donor" : "/");
+    router.replace(role === "donor" ? "/" : "/");
   };
 
 

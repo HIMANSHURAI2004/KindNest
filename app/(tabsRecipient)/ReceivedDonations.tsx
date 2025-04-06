@@ -1,4 +1,3 @@
-"use client"
 
 import { useState, useEffect } from "react"
 import {
@@ -442,10 +441,6 @@ const ReceivedDonations = () => {
     outputRange: [0, 180],
   })
 
-  const handleGoBack = () => {
-    router.replace("/(tabsRecipient)")
-  }
-
   const renderReceivedDonationCard = ({ item }: { item: any }) => {
     const isExpanded = selectedDonation === item.id
     const donationType = item.type || item.category || "Other"
@@ -716,11 +711,6 @@ const ReceivedDonations = () => {
     <View style={styles.container}>
       <LinearGradient colors={["#0B5351", "#092327"]} style={styles.headerGradient}>
         <View style={styles.header}>
-          {/* Back Button */}
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
-            <ArrowLeft width={20} height={20} color={THEME.textLight} />
-          </TouchableOpacity>
-
           <View style={styles.headerContent}>
             <BarChart2 width={28} height={28} color={THEME.textLight} />
             <Text style={styles.headerTitle}>Received Donations</Text>

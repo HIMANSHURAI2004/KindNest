@@ -91,7 +91,7 @@ interface Recipient {
 export default function Money() {
   const router = useRouter()
   const [amount, setAmount] = useState(0)
-  const [selectedPayment, setSelectedPayment] = useState("credit")
+  const [selectedPayment, setSelectedPayment] = useState("upi")
   const [cardNumber, setCardNumber] = useState("")
   const [expiryDate, setExpiryDate] = useState("")
   const [cvv, setCvv] = useState("")

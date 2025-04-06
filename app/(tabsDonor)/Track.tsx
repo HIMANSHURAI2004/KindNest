@@ -158,6 +158,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: THEME.background,
+    
   },
   backgroundImage: {
     flex: 1,
@@ -168,6 +169,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
+    paddingTop:20,
   },
   headerContent: {
     flexDirection: "row",
@@ -175,15 +177,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: THEME.textLight,
-    marginLeft: 12,
+    marginLeft: 14,
   },
   headerSubtitle: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
-    marginLeft: 12,
+    marginLeft: 14,
   },
   scrollContent: {
     paddingHorizontal: 16,

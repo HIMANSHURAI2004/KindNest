@@ -65,7 +65,7 @@ export default function HomeScreen() {
 
       {/* Navbar */}
       <View style={styles.navbar}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabsDonor)')}>
             <ArrowLeft width={20} height={20} color={THEME.textLight} />
         </TouchableOpacity>
         <TouchableOpacity  style={styles.navButton} onPress={() => router.replace('/donor/donationHistory')}>

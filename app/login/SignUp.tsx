@@ -59,7 +59,7 @@ const SignUp = () => {
   >
     <View className='h-[30%] rounded-b-3xl w-full relative'
       style = {{
-        backgroundColor: Colors.PRIMARY,
+        backgroundColor: "#0B5351",
       }}
     >
       <View className='absolute bottom-2 flex justify-center w-full px-10 py-4'>
@@ -79,7 +79,7 @@ const SignUp = () => {
             borderRadius: 10,
             marginTop: 20,
             borderWidth: 1,
-            borderColor: Colors.PRIMARY,
+            borderColor: "#0B5351",
           }}
           onPress={() => router.push('/login/SignUp')
         }>
@@ -87,7 +87,7 @@ const SignUp = () => {
           <Text style= {{
               textAlign: 'center',
               fontSize: 16,
-              color: Colors.PRIMARY
+              color: "#0B5351"
           }}
           className='font-[poppins]'
           >Sign up with google</Text>
@@ -148,7 +148,7 @@ const SignUp = () => {
         <Text style= {{
             textAlign: 'center',
             fontSize: 13,
-            color: Colors.PRIMARY
+            color: "#0B5351"
         }}
         className='underline font-[poppins] pt-2'
         >Already have an account? Sign in</Text>
@@ -171,7 +171,7 @@ const SignUp = () => {
               marginBottom: 20,
           },
           button: {
-              backgroundColor: Colors.PRIMARY,
+              backgroundColor: "#0B5351",
               padding: 15,
               borderRadius: 10,
               marginTop: 5,
@@ -183,7 +183,7 @@ const SignUp = () => {
               borderRadius: 10,
               marginTop: 15,
               borderWidth: 1,
-              borderColor: Colors.PRIMARY,
+              borderColor: "#0B5351",
           },
           logoImage: {
             width: 70,

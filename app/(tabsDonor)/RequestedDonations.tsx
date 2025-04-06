@@ -325,7 +325,7 @@ const RequestedDonations = () => {
   }
 
   const handleGoBack = () => {
-    router.replace("/(tabs)")
+    router.replace("/(tabsRecipient)")
   }
 
   const renderWishlistItem = ({ item }: { item: WishlistItem }) => {
@@ -393,11 +393,6 @@ const RequestedDonations = () => {
     <View style={styles.container}>
       <LinearGradient colors={["#0B5351", "#092327"]} style={styles.headerGradient}>
         <View style={styles.header}>
-          {/* Back Button */}
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={0.7}>
-            <ArrowLeft width={20} height={20} color={THEME.textLight} />
-          </TouchableOpacity>
-
           <View style={styles.headerContent}>
             <Heart width={24} height={24} color={THEME.textLight} />
             <Text style={styles.headerTitle}>Donation Requests</Text>
@@ -595,26 +590,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     position: "relative",
   },
-  backButton: {
-    position: "absolute",
-    left: 16,
-    top: 0,
-    zIndex: 10,
-    width: 35,
-    height: 35,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
-    paddingLeft: 40, // Make space for the back button
+    paddingLeft: 14, // Make space for the back button
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: THEME.textLight,
     marginLeft: 12,
@@ -622,7 +605,7 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
-    marginLeft: 40,
+    marginLeft: 14,
     marginBottom: 16,
   },
   statsContainer: {

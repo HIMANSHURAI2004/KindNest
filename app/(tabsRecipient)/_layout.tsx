@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/config/FirebaseConfig';
 import { getLocalStorage } from '@/service/Storage';
-
 const TabLayout = () => {
   const router = useRouter();
   useEffect(() => {
@@ -28,7 +27,7 @@ const TabLayout = () => {
           backgroundColor: '#092327',
           borderTopWidth: 0,
           position: 'absolute', 
-          bottom: 20,
+          bottom: 8,
           height:55,
           paddingHorizontal:5,
           marginHorizontal: 12,
@@ -46,36 +45,37 @@ const TabLayout = () => {
       <Tabs.Screen 
         name="index" 
         options={{ 
-          tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+        tabBarLabel: 'Home',
+        tabBarIcon: ({ color, size }) => (
+        <Ionicons name="home" size={size} color={color} />
           ),
         }} 
+      />
+    <Tabs.Screen 
+      name="Wishlist" 
+      options={{ 
+      tabBarLabel: 'Wishlist',
+      tabBarIcon: ({ color, size }) => (
+        <Ionicons name="bookmark" size={size} color={color} />
+      ),
+    }} 
       />
       <Tabs.Screen 
-        name="Events" 
+        name="ReceivedDonations" 
         options={{ 
-          tabBarLabel: 'Event',
+          tabBarLabel: 'Received',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+            <Ionicons name="gift" size={size} color={color} />
           ),
         }} 
       />
+  
       <Tabs.Screen 
         name="Track" 
         options={{ 
           tabBarLabel: 'Track',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="location" size={size} color={color} />
-          ),
-        }} 
-      />
-      <Tabs.Screen 
-        name="Wishlist" 
-        options={{ 
-          tabBarLabel: 'Wishlist',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bookmark" size={size} color={color} />
           ),
         }} 
       />

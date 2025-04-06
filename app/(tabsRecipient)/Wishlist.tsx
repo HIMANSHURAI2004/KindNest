@@ -466,6 +466,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: THEME.background,
     marginBottom: 85,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   backgroundImage: {
     flex: 1,
@@ -476,6 +478,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
+    paddingTop: 20,
   },
   headerContent: {
     flexDirection: "row",

@@ -144,7 +144,7 @@ export default function AIAssistantScreen() {
         <LinearGradient colors={["#0B5351", "#092327"]} start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }} style={styles.headerGradient}>
           <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={() => (router.replace("/(tabs)"))} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.backButton} onPress={() => (router.replace("/(tabsDonor)"))} activeOpacity={0.7}>
               <ArrowLeft width={24} height={24} color="#ffffff" />
             </TouchableOpacity>
             <View style={styles.headerContent}>

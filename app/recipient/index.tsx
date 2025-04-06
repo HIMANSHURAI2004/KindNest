@@ -70,7 +70,7 @@ export default function RecipientHome() {
 
       {/* Navbar */}
       <View style={styles.navbar}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabsRecipient)')}>
             <ArrowLeft width={20} height={20} color={THEME.textLight} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton}>

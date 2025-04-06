@@ -439,7 +439,7 @@ const DonationHistory = () => {
   })
 
   const handleGoBack = () => {
-    router.replace("/(tabs)")
+    router.replace("/(tabsDonor)")
   }
 
   const renderMyDonationCard = ({ item }: { item: any }) => {
