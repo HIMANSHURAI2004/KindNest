@@ -14,7 +14,7 @@ import {
   Dimensions,
   Platform,
   Keyboard,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, Timestamp } from "firebase/firestore"
@@ -133,7 +133,7 @@ const Wishlist = () => {
     const fetchWishlist = async () => {
       const userInfo = await getLocalStorage("userDetail");
 
-      // console.log("User Info:", userInfo); // Debugging line
+      console.log("User Info:", userInfo); // Debugging line
   
       if (!userInfo?.uid) return;
   
@@ -275,6 +275,7 @@ const Wishlist = () => {
                 <AntDesign name="delete" size={16} color={THEME.error} />
               </TouchableOpacity>
               
+              
             </View>
           </View>
 
@@ -283,6 +284,13 @@ const Wishlist = () => {
             <Text style={styles.wishlistItemDescription}>{item.description}</Text>
             {/* <Text style={styles.wishlistItemRequesterText}>Status: {item.status}</Text> */}
             <View style={styles.wishlistItemRequester}>
+              <View style={styles.wishlistItemSubRequester}>
+                <User width={14} height={14} color={THEME.textMuted} />
+                <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
+              </View>
+              {item.status && <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
+                      <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status?.toUpperCase()}</Text>
+                    </View>}
               <View style={styles.wishlistItemSubRequester}>
                 <User width={14} height={14} color={THEME.textMuted} />
                 <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
