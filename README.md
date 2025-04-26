@@ -42,74 +42,6 @@
 ├─ .gitignore
 ├─ README.md
 ├─ android
-│  ├─ .gitignore
-│  ├─ app
-│  │  ├─ build.gradle
-│  │  ├─ debug.keystore
-│  │  ├─ proguard-rules.pro
-│  │  └─ src
-│  │     ├─ debug
-│  │     │  └─ AndroidManifest.xml
-│  │     └─ main
-│  │        ├─ AndroidManifest.xml
-│  │        ├─ java
-│  │        │  └─ com
-│  │        │     └─ giri12345
-│  │        │        └─ rnf_tut
-│  │        │           ├─ MainActivity.kt
-│  │        │           └─ MainApplication.kt
-│  │        └─ res
-│  │           ├─ drawable-hdpi
-│  │           │  └─ splashscreen_logo.png
-│  │           ├─ drawable-mdpi
-│  │           │  └─ splashscreen_logo.png
-│  │           ├─ drawable-xhdpi
-│  │           │  └─ splashscreen_logo.png
-│  │           ├─ drawable-xxhdpi
-│  │           │  └─ splashscreen_logo.png
-│  │           ├─ drawable-xxxhdpi
-│  │           │  └─ splashscreen_logo.png
-│  │           ├─ drawable
-│  │           │  ├─ ic_launcher_background.xml
-│  │           │  └─ rn_edit_text_material.xml
-│  │           ├─ mipmap-anydpi-v26
-│  │           │  ├─ ic_launcher.xml
-│  │           │  └─ ic_launcher_round.xml
-│  │           ├─ mipmap-hdpi
-│  │           │  ├─ ic_launcher.webp
-│  │           │  ├─ ic_launcher_foreground.webp
-│  │           │  └─ ic_launcher_round.webp
-│  │           ├─ mipmap-mdpi
-│  │           │  ├─ ic_launcher.webp
-│  │           │  ├─ ic_launcher_foreground.webp
-│  │           │  └─ ic_launcher_round.webp
-│  │           ├─ mipmap-xhdpi
-│  │           │  ├─ ic_launcher.webp
-│  │           │  ├─ ic_launcher_foreground.webp
-│  │           │  └─ ic_launcher_round.webp
-│  │           ├─ mipmap-xxhdpi
-│  │           │  ├─ ic_launcher.webp
-│  │           │  ├─ ic_launcher_foreground.webp
-│  │           │  └─ ic_launcher_round.webp
-│  │           ├─ mipmap-xxxhdpi
-│  │           │  ├─ ic_launcher.webp
-│  │           │  ├─ ic_launcher_foreground.webp
-│  │           │  └─ ic_launcher_round.webp
-│  │           ├─ values-night
-│  │           │  └─ colors.xml
-│  │           └─ values
-│  │              ├─ colors.xml
-│  │              ├─ strings.xml
-│  │              └─ styles.xml
-│  ├─ build.gradle
-│  ├─ gradle.properties
-│  ├─ gradle
-│  │  └─ wrapper
-│  │     ├─ gradle-wrapper.jar
-│  │     └─ gradle-wrapper.properties
-│  ├─ gradlew
-│  ├─ gradlew.bat
-│  └─ settings.gradle
 ├─ app.config.js
 ├─ app.json
 ├─ app
@@ -148,81 +80,30 @@
 │  │     └─ index.tsx
 │  ├─ features
 │  │  ├─ contact.tsx
-│  │  └─ donations.tsx
 │  ├─ login
 │  │  ├─ SignIn.tsx
 │  │  ├─ SignUp.tsx
 │  │  └─ index.tsx
 │  └─ recipient
 │     ├─ _layout.tsx
-│     ├─ food
-│     │  └─ index.tsx
 │     ├─ index.tsx
 │     └─ receivedDonations
 │        └─ index.tsx
 ├─ assets
-│  ├─ fonts
-│  │  ├─ Poppins-Bold.ttf
-│  │  ├─ Poppins-Medium.ttf
-│  │  ├─ Poppins-Regular.ttf
-│  │  └─ SpaceMono-Regular.ttf
-│  └─ images
-│     ├─ clothes.png
-│     ├─ default-profile-pic.png
-│     ├─ favicon.png
-│     ├─ food.png
-│     ├─ icon.png
-│     ├─ image.png
-│     ├─ login_image.png
-│     ├─ logo.png
-│     ├─ logoColor.png
-│     ├─ logoDark.jpg
-│     ├─ money.png
-│     ├─ other.png
-│     ├─ partial-react-logo.png
-│     ├─ profile.jpg
-│     ├─ react-logo.png
-│     ├─ react-logo@2x.png
-│     ├─ react-logo@3x.png
-│     ├─ toys.png
-│     ├─ welcome.png
-│     └─ welcome1.png
 ├─ babel.config.js
 ├─ components
-│  ├─ Collapsible.tsx
-│  ├─ ExternalLink.tsx
-│  ├─ HapticTab.tsx
-│  ├─ HelloWave.tsx
-│  ├─ ParallaxScrollView.tsx
-│  ├─ ThemedText.tsx
-│  ├─ ThemedView.tsx
-│  ├─ __tests__
-│  │  ├─ ThemedText-test.tsx
-│  │  └─ __snapshots__
-│  │     └─ ThemedText-test.tsx.snap
-│  └─ ui
-│     ├─ IconSymbol.ios.tsx
-│     ├─ IconSymbol.tsx
-│     ├─ TabBarBackground.ios.tsx
-│     └─ TabBarBackground.tsx
 ├─ config
 │  └─ FirebaseConfig.tsx
 ├─ constants
-│  └─ Colors.tsx
 ├─ eas.json
 ├─ global.css
 ├─ hooks
-│  ├─ useColorScheme.ts
-│  ├─ useColorScheme.web.ts
-│  └─ useThemeColor.ts
 ├─ metro.config.js
 ├─ nativewind-env.d.ts
 ├─ package-lock.json
 ├─ package.json
 ├─ scripts
-│  └─ reset-project.js
 ├─ service
-│  └─ Storage.tsx
 ├─ tailwind.config.js
 └─ tsconfig.json
 ```
@@ -286,15 +167,9 @@ Make sure the backend Firebase services (Authentication, Firestore, Storage) are
 - **@expo/vector-icons** — Expo-friendly version of Vector Icons.
 
 ### Utilities
-- **Day.js** — Lightweight JavaScript date library.
 - **NativeWind** — TailwindCSS styling for React Native.
-- **TailwindCSS** — Utility-first CSS framework.
 - **Async Storage** — For storing data locally on device.
 - **Expo Location** — Access device’s location.
-- **Expo Constants** — System information and environment constants.
-- **Expo Web Browser** — Provides a browser within your app.
-- **Expo Haptics** — Tactile feedback on supported devices.
-- **Expo Blur** — Apply blur effects.
 - **Expo Linear Gradient** — Use linear gradients in components.
 
 ### Forms and Pickers
@@ -305,17 +180,9 @@ Make sure the backend Firebase services (Authentication, Firestore, Storage) are
 - **@react-native-google-signin/google-signin** — Google Sign-In integration.
 - **Expo Auth Session** — Authentication flows (OAuth, Google, etc).
 
-### Other Libraries
-- **Expo Splash Screen** — Manage and customize splash screens.
-- **Expo Status Bar** — Manage app status bar appearance.
-- **Expo System UI** — Control system UI appearance.
-
 ### Development & Testing
 - **Expo Dev Client** — Development build environment for Expo apps.
-- **Jest** — JavaScript testing framework.
-- **Jest Expo** — Jest preset for testing Expo apps.
 - **TypeScript** — Strongly typed programming for JavaScript.
-- **React Test Renderer** — For snapshot testing of React components.
 - **Expo Lint** — Linting utility for Expo projects.
 
 
@@ -323,7 +190,6 @@ In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
@@ -360,10 +226,3 @@ To learn more about developing your project with Expo, look at the following res
 
 - [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
 - [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
