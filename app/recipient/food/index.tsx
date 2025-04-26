@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import {
   View,
@@ -15,7 +13,6 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 import { ArrowLeft, Plus, Minus } from "react-native-feather";
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";

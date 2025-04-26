@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import {
   View,
@@ -7,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ImageBackground,
   Dimensions,
   Platform,
   ActivityIndicator,
@@ -18,7 +15,7 @@ import { LinearGradient } from "expo-linear-gradient"
 import { Image } from "expo-image"
 import { MapPin, Home, Users, Briefcase, ChevronRight, Navigation } from "react-native-feather"
 
-const { width, height } = Dimensions.get("window")
+const { width } = Dimensions.get("window")
 
 const THEME = {
   primary: "#1f6969",
@@ -98,13 +95,14 @@ const TrackScreen = () => {
                   end={{ x: 1, y: 0 }} style={styles.headerGradient}>
           <View style={styles.header}>
             <View style={styles.headerContent}>
-              {/* <MapPin width={28} height={28} color={THEME.textLight} /> */}
+              <MapPin width={28} height={28} color={THEME.textLight} />
               <Text style={styles.headerTitle}>Find Nearby</Text>
             </View>
             <Text style={styles.headerSubtitle}>Locate places where you can contribute to kindness</Text>
           </View>
         </LinearGradient>
-
+        <View>
+        </View>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.cardsContainer}>
             {locationCards.map((card) => (

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   View,
@@ -263,11 +261,21 @@ const EventBooking = () => {
         ...(doc.data() as Omit<Event, "id">),
       }))
       setEvents(eventList)
+      
     })
-
     return () => unsubscribe()
   }, [])
 
+  const [userId,setUserId] = useState(null);
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const userInfo = await getLocalStorage("userDetail")
+      const uid = userInfo?.uid || userInfo?.id || null
+      setUserId(uid)
+    }
+
+    fetchUserInfo()
+  })
   const handleSubmit = async () => {
     if (!name || !contact || !eventType || !location || !eventDate || !selectedTimeSlot) {
       Alert.alert("Missing Information", "Please fill in all required fields to book your event.")
@@ -275,8 +283,10 @@ const EventBooking = () => {
     }
 
     setLoading(true)
+    
     try {
       const eventData = {
+        donorId: userId,
         name,
         contact,
         eventType,
@@ -612,21 +622,21 @@ const EventBooking = () => {
               </View>
             }
             ListEmptyComponent={
-              events.length === 0 && (
+              events.length === 0 ? (
                 <View style={styles.emptyStateContainer}>
                   <AntDesign name="calendar" size={50} color={THEME.textMuted} />
                   <Text style={styles.emptyStateText}>No events booked yet</Text>
                   <Text style={styles.emptyStateSubtext}>Your scheduled events will appear here</Text>
                 </View>
-              )
+              ) : null
             }
             ListFooterComponent={
-              events.length > 0 && (
+              events.length > 0 ? (
                 <View style={styles.upcomingEventsHeader}>
                   <Text style={styles.upcomingEventsTitle}>Your Upcoming Events</Text>
                   <View style={styles.upcomingEventsDivider} />
                 </View>
-              )
+              ) : null
             }
             ListHeaderComponentStyle={styles.listHeaderStyle}
           />
@@ -738,6 +748,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: THEME.background,
+    marginBottom: 28,
   },
   backgroundContainer: {
     marginTop: 20,

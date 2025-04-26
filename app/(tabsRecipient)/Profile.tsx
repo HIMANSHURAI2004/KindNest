@@ -1,12 +1,9 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   Alert,
   ScrollView,
   ActivityIndicator,

@@ -1,8 +1,6 @@
 import { Tabs, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import React, { useEffect, useState } from 'react'
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/config/FirebaseConfig';
+import React, { useEffect } from 'react'
 import { getLocalStorage } from '@/service/Storage';
 import AntDesign from '@expo/vector-icons/AntDesign';
 const TabLayout = () => {

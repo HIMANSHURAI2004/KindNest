@@ -1,14 +1,11 @@
 import { View, Text, TextInput, TouchableOpacity, ToastAndroid, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { StyleSheet } from 'react-native'
-import Colors from '@/constants/Colors'
 import { Link, useRouter } from 'expo-router'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth, database } from '@/config/FirebaseConfig'
 import { setLocalStorage } from '@/service/Storage'
-import Octicons from '@expo/vector-icons/Octicons';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Image } from 'expo-image'
 import { doc, getDoc } from 'firebase/firestore'
 const SignIn = () => {
@@ -35,7 +32,7 @@ const SignIn = () => {
     
           if (userSnap.exists()) {
             const userData = userSnap.data();
-            console.log(userData);
+            // console.log(userData);
             
             if (userData.category) {
               await setLocalStorage("category",userData.category);

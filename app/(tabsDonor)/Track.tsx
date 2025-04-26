@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import {
   View,
@@ -7,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ImageBackground,
   Dimensions,
   Platform,
   ActivityIndicator,
@@ -16,9 +13,9 @@ import { useRouter } from "expo-router"
 import * as Location from "expo-location"
 import { LinearGradient } from "expo-linear-gradient"
 import { Image } from "expo-image"
-import { MapPin, Home, Users, Briefcase, ChevronRight, Navigation } from "react-native-feather"
+import { Home, Users, Briefcase, ChevronRight, Navigation } from "react-native-feather"
 
-const { width, height } = Dimensions.get("window")
+const { width } = Dimensions.get("window")
 
 const THEME = {
   primary: "#1f6969",

@@ -1,11 +1,9 @@
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from "react-native";
 import { setLocalStorage, getLocalStorage } from "@/service/Storage";
-import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { database } from "@/config/FirebaseConfig";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 
 const THEME = {
   primary: "#1f6969",
@@ -39,7 +37,7 @@ export default function CategorySelection() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={THEME.primary} />
+      <StatusBar barStyle="light-content" backgroundColor="#0B5351" />
       <Image source={require("@/assets/images/logo.png")} style={styles.logoImage} contentFit="contain" />
       <Text style={styles.heading}>Choose Your Role</Text>
       <Text style={styles.subHeading}>Help us understand how you want to contribute.</Text>
@@ -70,7 +68,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: THEME.primary,
+    backgroundColor: "#0B5351",
     paddingHorizontal: 24,
   },
   heading: {

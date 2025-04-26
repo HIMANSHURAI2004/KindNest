@@ -116,7 +116,7 @@ export default function AIAssistantScreen() {
       const deletePromises = snapshot.docs.map((doc) => deleteDoc(doc.ref));
       await Promise.all(deletePromises);
       setMessages([]);
-      console.log("Chat cleared!");
+      // console.log("Chat cleared!");
     } catch (error) {
       console.error("Error clearing chat:", error);
     }
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     },
   clearButton: {
     position: "absolute",
-    top: 120,
+    top: 90,
     right: 10,
     backgroundColor: "#ef4444",
     padding: 10,

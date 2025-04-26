@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   View,
@@ -10,11 +8,8 @@ import {
   Alert,
   ActivityIndicator,
   StyleSheet,
-  ImageBackground,
   Dimensions,
   Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
 } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, Timestamp } from "firebase/firestore"
@@ -23,7 +18,6 @@ import AntDesign from "@expo/vector-icons/AntDesign"
 import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
 import {
-  Heart,
   ShoppingBag,
   Coffee,
   Gift,
@@ -36,9 +30,6 @@ import {
   Activity,
 } from "react-native-feather"
 import { getLocalStorage } from "@/service/Storage"
-import { set } from "firebase/database"
-
-const { width } = Dimensions.get("window")
 
 type WishlistItem = {
   id: string
@@ -133,7 +124,7 @@ const Wishlist = () => {
     const fetchWishlist = async () => {
       const userInfo = await getLocalStorage("userDetail");
 
-      console.log("User Info:", userInfo); // Debugging line
+      // console.log("User Info:", userInfo); // Debugging line
   
       if (!userInfo?.uid) return;
   
@@ -216,6 +207,7 @@ const Wishlist = () => {
     setCategory(item.category)
     setDescription(item.description)
     setRequester(item.requester)
+  
   }
 
   const handleDelete = async (id: string) => {
@@ -284,13 +276,6 @@ const Wishlist = () => {
             <Text style={styles.wishlistItemDescription}>{item.description}</Text>
             {/* <Text style={styles.wishlistItemRequesterText}>Status: {item.status}</Text> */}
             <View style={styles.wishlistItemRequester}>
-              <View style={styles.wishlistItemSubRequester}>
-                <User width={14} height={14} color={THEME.textMuted} />
-                <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
-              </View>
-              {item.status && <View style={[styles.statusBadge, { backgroundColor: `${THEME.primary}20` }]}>
-                      <Text style={[styles.statusText, { color: THEME.primary }]}>{item.status?.toUpperCase()}</Text>
-                    </View>}
               <View style={styles.wishlistItemSubRequester}>
                 <User width={14} height={14} color={THEME.textMuted} />
                 <Text style={styles.wishlistItemRequesterText}>Requested by: {item.requester}</Text>
@@ -461,6 +446,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: THEME.background,
+    marginBottom: 30,
   },
   backgroundContainer: {
     marginTop: 20,

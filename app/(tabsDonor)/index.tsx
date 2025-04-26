@@ -799,49 +799,24 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.shortcutsContainer}>
-            {userType === "donor" ? (
-              <>
                 {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/3081/3081792.png",
+                  image: "https://cdn-icons-png.flaticon.com/128/11008/11008379.png",
                   title: "Donate",
                   gradient: ["#4CAF50", "#81C784"],
                   onPress: () => router.push("/donor"),
                 })}
                 {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/2942/2942499.png",
+                  image: "https://cdn-icons-png.flaticon.com/128/3349/3349234.png",
                   title: "My Donations",
                   gradient: ["#2196F3", "#64B5F6"],
                   onPress: () => router.push("/donor/donationHistory"),
                 })}
                 {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/2076/2076218.png",
+                  image: "https://cdn-icons-png.flaticon.com/128/724/724715.png",
                   title: "Chat",
                   gradient: ["#FF9800", "#FFB74D"],
                   onPress: () => router.push("/chat"),
                 })}
-              </>
-            ) : (
-              <>
-                {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/2942/2942499.png",
-                  title: "Received",
-                  gradient: ["#4CAF50", "#81C784"],
-                  onPress: () => router.push("/recipient/receivedDonations"),
-                })}
-                {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/2076/2076218.png",
-                  title: "Chat",
-                  gradient: ["#2196F3", "#64B5F6"],
-                  onPress: () => router.push("/chat"),
-                })}
-                {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/3227/3227053.png",
-                  title: "Request",
-                  gradient: ["#FF9800", "#FFB74D"],
-                  onPress: () => router.push("/recipient/request"),
-                })}
-              </>
-            )}
           </View>
         </View>
 
@@ -1150,11 +1125,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 20,
     overflow: "hidden",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    
   },
   shortcutButton: {
     padding: 20,
@@ -1174,7 +1145,6 @@ const styles = StyleSheet.create({
   shortcutIcon: {
     width: 30,
     height: 30,
-    tintColor: "#fff",
   },
   shortcutTitle: {
     fontSize: 14,

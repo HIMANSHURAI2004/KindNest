@@ -928,6 +928,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: THEME.background,
+    marginBottom: 34,
   },
   headerGradient: {
     paddingTop: Platform.OS === "ios" ? 50 : 40,

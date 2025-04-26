@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import {
   View,
@@ -43,7 +41,6 @@ const THEME = {
   other: "#9C27B0",
 }
 
-// Featured campaigns with images
 const featuredCampaigns = [
   {
     id: "1",
@@ -71,7 +68,6 @@ const featuredCampaigns = [
   },
 ]
 
-// Impact statistics with images
 const impactStats = [
   {
     id: "1",
@@ -96,7 +92,6 @@ const impactStats = [
   },
 ]
 
-// Testimonials
 const testimonials = [
   {
     id: "1",
@@ -118,7 +113,6 @@ const testimonials = [
   },
 ]
 
-// Category images mapping
 const categoryImages = {
   Food: "https://hips.hearstapps.com/hmg-prod/images/food-bank-donations-1670258739.jpg",
   Clothing: "https://t4.ftcdn.net/jpg/03/07/44/67/360_F_307446785_ANJdwWGpWT1EC7Adl3Y8ukdANFT8M0RN.jpg",
@@ -129,22 +123,18 @@ const categoryImages = {
   Default: "https://img.freepik.com/premium-photo/box-full-used-toys-cloths-books-stationery-donation_49149-816.jpg",
 }
 
-// Format date for display
 const formatDate = (timestamp: Timestamp | string) => {
   let date
 
-  // If it's a Firestore Timestamp object, convert to Date
   if (timestamp instanceof Timestamp) {
     date = timestamp.toDate()
   }
-  // If it's a string, convert it directly
   else if (typeof timestamp === "string") {
     date = new Date(timestamp)
   } else {
     return "Invalid Date"
   }
 
-  // Calculate time difference
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
@@ -164,10 +154,8 @@ const formatDate = (timestamp: Timestamp | string) => {
   }
 }
 
-// Cache for donor/recipient information to avoid repeated fetches
 const userCache: Record<string, any> = {}
 
-// Fetch user information from users collection
 const fetchUserInfo = async (userId: string): Promise<any | null> => {
   if (!userId) return null
 
@@ -203,7 +191,6 @@ const fetchUserInfo = async (userId: string): Promise<any | null> => {
   }
 }
 
-// Get category image
 const getCategoryImage = (category: string) => {
   const normalizedCategory = category?.toLowerCase() || ""
 
@@ -224,7 +211,6 @@ export default function HomeScreen() {
   const [userId, setUserId] = useState("")
   const [loading, setLoading] = useState(true)
 
-  // Donations state
   const [recentDonations, setRecentDonations] = useState<any[]>([])
   const [receivedDonations, setReceivedDonations] = useState<any[]>([])
   const [donationStats, setDonationStats] = useState({
@@ -234,12 +220,10 @@ export default function HomeScreen() {
     communities: 0,
   })
 
-  // Animation values
   const scrollX = useRef(new Animated.Value(0)).current
   const testimonialScrollX = useRef(new Animated.Value(0)).current
   const impactAnimations = useRef(impactStats.map(() => new Animated.Value(0))).current
 
-  // Refs for auto-scrolling
   const featuredRef = useRef(null)
   const testimonialsRef = useRef(null)
 
@@ -248,12 +232,10 @@ export default function HomeScreen() {
   const [testimonialIndex, setTestimonialIndex] = useState(0)
 
   useEffect(() => {
-    // Fetch user data and donations
     const fetchData = async () => {
       try {
         setLoading(true)
 
-        // Get user details from local storage
         const userDetail = await getLocalStorage("userDetail")
         const userCategory = await getLocalStorage("category")
 
@@ -266,7 +248,6 @@ export default function HomeScreen() {
           setUserType(userCategory)
         }
 
-        // Fetch donations based on user type
         if (userDetail?.uid) {
           if (userCategory === "donor") {
             await fetchDonorData(userDetail.uid)
@@ -283,7 +264,6 @@ export default function HomeScreen() {
 
     fetchData()
 
-    // Animate impact stats
     const animateImpactStats = () => {
       const animations = impactAnimations.map((anim, index) => {
         return Animated.timing(anim, {
@@ -301,7 +281,6 @@ export default function HomeScreen() {
     animateImpactStats()
   }, [])
 
-  // Set up auto-scrolling for featured campaigns and testimonials
   useEffect(() => {
     const featuredInterval = setInterval(() => {
       if (featuredRef.current) {
@@ -798,49 +777,25 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.shortcutsContainer}>
-            {userType === "donor" ? (
-              <>
+
                 {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/3081/3081792.png",
-                  title: "Donate",
-                  gradient: ["#4CAF50", "#81C784"],
-                  onPress: () => router.push("/donor"),
-                })}
-                {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/2942/2942499.png",
-                  title: "My Donations",
-                  gradient: ["#2196F3", "#64B5F6"],
-                  onPress: () => router.push("/donor/donationHistory"),
-                })}
-                {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/2076/2076218.png",
-                  title: "Chat",
-                  gradient: ["#FF9800", "#FFB74D"],
-                  onPress: () => router.push("/chat"),
-                })}
-              </>
-            ) : (
-              <>
-                {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/2942/2942499.png",
+                  image: "https://cdn-icons-png.flaticon.com/128/6384/6384846.png",
                   title: "Received",
                   gradient: ["#4CAF50", "#81C784"],
                   onPress: () => router.push("/recipient/receivedDonations"),
                 })}
                 {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/2076/2076218.png",
+                  image: "https://cdn-icons-png.flaticon.com/128/868/868681.png",
+                  title: "Request",
+                  gradient: ["#FF9800", "#FFB74D"],
+                  onPress: () => router.push("/recipient/WishList"),
+                })}
+                {renderShortcut({
+                  image: "https://cdn-icons-png.flaticon.com/128/724/724715.png",
                   title: "Chat",
                   gradient: ["#2196F3", "#64B5F6"],
                   onPress: () => router.push("/chat"),
                 })}
-                {renderShortcut({
-                  image: "https://cdn-icons-png.flaticon.com/512/3227/3227053.png",
-                  title: "Request",
-                  gradient: ["#FF9800", "#FFB74D"],
-                  onPress: () => router.push("/recipient/request"),
-                })}
-              </>
-            )}
           </View>
         </View>
 
@@ -1149,11 +1104,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 20,
     overflow: "hidden",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
   },
   shortcutButton: {
     padding: 20,
@@ -1173,7 +1123,6 @@ const styles = StyleSheet.create({
   shortcutIcon: {
     width: 30,
     height: 30,
-    tintColor: "#fff",
   },
   shortcutTitle: {
     fontSize: 14,

@@ -1,11 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Dimensions, Platform } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Platform } from "react-native"
 import { Image } from "expo-image"
 import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
 import { useRouter } from "expo-router"
 import { ArrowLeft } from "react-native-feather"
 
-const { width, height } = Dimensions.get("window")
 
 const THEME = {
   primary: "#1f6969",

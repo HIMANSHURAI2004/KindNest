@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   View,
@@ -23,7 +21,6 @@ import {
   Coffee,
   ShoppingCart,
   Package,
-  ArrowLeft,
   Activity,
   Gift,
   AlertTriangle,
@@ -38,7 +35,6 @@ import { database as db } from "@/config/FirebaseConfig"
 import { collection, getDocs, Timestamp, query, where, doc, getDoc, updateDoc } from "firebase/firestore"
 import { getLocalStorage } from "@/service/Storage"
 
-const { width } = Dimensions.get("window")
 
 interface WishlistItem {
   id: string
@@ -581,6 +577,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: THEME.background,
+    marginBottom: 30,
   },
   headerGradient: {
     paddingTop: Platform.OS === "ios" ? 50 : 40,

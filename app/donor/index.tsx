@@ -4,9 +4,6 @@ import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
 import { useRouter } from "expo-router"
 import { ArrowLeft } from "react-native-feather"
-import { getLocalStorage } from "@/service/Storage"
-
-const { width, height } = Dimensions.get("window")
 
 const THEME = {
   primary: "#0B5351" ,
